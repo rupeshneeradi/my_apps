@@ -1,0 +1,182 @@
+{% extends "base.html" %}
+{% block title %}Categories — Expenses Tracker{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center justify-content-between mb-4">
+  <h1 class="page-title mb-0"><i class="bi bi-tags me-2"></i>Categories & Rules</h1>
+  <form method="post" action="{{ url_for('import_web_categories') }}"
+        onsubmit="return confirm('Import all standard web categories? This adds ~200 keyword rules.')">
+    <button class="btn btn-outline-primary btn-sm">
+      <i class="bi bi-cloud-download me-1"></i>Import Web Categories
+    </button>
+  </form>
+</div>
+
+<div class="row g-4">
+  <!-- Wasted Keywords -->
+  <div class="col-lg-5">
+    <div class="card-panel">
+      <div class="panel-header d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-exclamation-triangle-fill text-danger me-2"></i>Wasted Expenses List</span>
+        <span class="badge bg-danger">{{ wasted_kws|length }}</span>
+      </div>
+      <p class="text-muted small px-1 mb-2">
+        Any transaction whose description contains a keyword below is flagged as <strong class="text-danger">Wasted</strong>.
+        Add an <em>exception</em> word to exclude matches (e.g. Costco Gas is NOT wasted).
+      </p>
+
+      <!-- Add wasted keyword -->
+      <form method="post" action="{{ url_for('add_wasted_keyword') }}" class="mb-3 p-2 bg-light rounded">
+        <div class="row g-2">
+          <div class="col-12">
+            <input type="text" name="keyword" class="form-control form-control-sm" placeholder="Keyword (e.g. shell, tobacco)" required>
+          </div>
+          <div class="col-12">
+            <input type="text" name="reason" class="form-control form-control-sm" placeholder="Reason (e.g. Gas station)">
+          </div>
+          <div class="col-12">
+            <input type="text" name="exclude_if_contains" class="form-control form-control-sm"
+                   placeholder="Exception: if description also contains… (e.g. costco)">
+          </div>
+          <div class="col-12">
+            <button class="btn btn-danger btn-sm w-100">
+              <i class="bi bi-plus-circle me-1"></i>Add Wasted Keyword
+            </button>
+          </div>
+        </div>
+      </form>
+
+      <!-- Wasted keyword list -->
+      <div style="max-height: 420px; overflow-y: auto;">
+
+        <div class="mb-2">
+          <div class="text-muted small fw-semibold px-1 mb-1">
+            <i class="bi bi-fire text-warning me-1"></i>Tobacco / Smoking
+          </div>
+          {% set tobacco_terms = ['obacco','mok','ape','igar','icotine'] %}
+          {% for kw in wasted_kws %}{% set r = kw.reason or '' %}
+          {% if 'obacco' in r or 'mok' in r or 'ape' in r or 'igar' in r or 'icotine' in r %}
+          <div class="wasted-kw-row d-flex justify-content-between align-items-center px-2 py-1 mb-1 rounded">
+            <div>
+              <span class="badge bg-danger me-1">{{ kw.keyword }}</span>
+              {% if kw.exclude_if_contains %}<small class="text-success">except "{{ kw.exclude_if_contains }}"</small>{% endif %}
+            </div>
+            <form method="post" action="{{ url_for('delete_wasted_keyword', kw_id=kw.id) }}">
+              <button class="btn btn-xs btn-outline-danger"><i class="bi bi-x"></i></button>
+            </form>
+          </div>
+          {% endif %}{% endfor %}
+        </div>
+
+        <div class="mb-2">
+          <div class="text-muted small fw-semibold px-1 mb-1">
+            <i class="bi bi-fuel-pump text-warning me-1"></i>Gas Stations (except Costco)
+          </div>
+          {% for kw in wasted_kws %}{% set r = (kw.reason or '')|lower %}
+          {% if 'gas' in r or 'fuel' in r %}
+          <div class="wasted-kw-row d-flex justify-content-between align-items-center px-2 py-1 mb-1 rounded">
+            <div>
+              <span class="badge bg-warning text-dark me-1">{{ kw.keyword }}</span>
+              {% if kw.exclude_if_contains %}<small class="text-success">except "{{ kw.exclude_if_contains }}"</small>{% endif %}
+            </div>
+            <form method="post" action="{{ url_for('delete_wasted_keyword', kw_id=kw.id) }}">
+              <button class="btn btn-xs btn-outline-danger"><i class="bi bi-x"></i></button>
+            </form>
+          </div>
+          {% endif %}{% endfor %}
+        </div>
+
+        <div>
+          <div class="text-muted small fw-semibold px-1 mb-1">
+            <i class="bi bi-plus-circle me-1"></i>Custom
+          </div>
+          {% set ns = namespace(found=false) %}
+          {% for kw in wasted_kws %}{% set r = (kw.reason or '')|lower %}
+          {% if 'gas' not in r and 'fuel' not in r and 'obacco' not in r and 'mok' not in r and 'ape' not in r and 'igar' not in r and 'icotine' not in r %}
+          {% set ns.found = true %}
+          <div class="wasted-kw-row d-flex justify-content-between align-items-center px-2 py-1 mb-1 rounded">
+            <div>
+              <span class="badge bg-secondary me-1">{{ kw.keyword }}</span>
+              {% if kw.reason %}<small class="text-muted">{{ kw.reason }}</small>{% endif %}
+              {% if kw.exclude_if_contains %}<small class="text-success ms-1">except "{{ kw.exclude_if_contains }}"</small>{% endif %}
+            </div>
+            <form method="post" action="{{ url_for('delete_wasted_keyword', kw_id=kw.id) }}">
+              <button class="btn btn-xs btn-outline-danger"><i class="bi bi-x"></i></button>
+            </form>
+          </div>
+          {% endif %}{% endfor %}
+          {% if not ns.found %}<p class="text-muted small px-1">No custom wasted keywords yet.</p>{% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Category Rules -->
+  <div class="col-lg-7">
+    <div class="card-panel">
+      <div class="panel-header d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-tag me-2"></i>Category Rules</span>
+        <span class="badge bg-primary">{{ rules|length }}</span>
+      </div>
+      <p class="text-muted small px-1 mb-2">
+        Transactions whose description contains a keyword are auto-assigned that category.
+      </p>
+
+      <!-- Add rule -->
+      <form method="post" action="{{ url_for('add_category_rule') }}" class="mb-3 p-2 bg-light rounded">
+        <div class="row g-2">
+          <div class="col-5">
+            <input type="text" name="keyword" class="form-control form-control-sm"
+                   placeholder="Keyword (e.g. netflix)" required>
+          </div>
+          <div class="col-5">
+            <input type="text" name="category" class="form-control form-control-sm"
+                   placeholder="Category (e.g. Entertainment)" required list="catOptions">
+            <datalist id="catOptions">
+              {% set seen = [] %}
+              {% for r in rules %}
+                {% if r.category not in seen %}
+                  <option value="{{ r.category }}">
+                  {% if seen.append(r.category) %}{% endif %}
+                {% endif %}
+              {% endfor %}
+            </datalist>
+          </div>
+          <div class="col-2">
+            <button class="btn btn-primary btn-sm w-100">Add</button>
+          </div>
+        </div>
+      </form>
+
+      <!-- Rules grouped by category -->
+      <div style="max-height: 500px; overflow-y: auto;">
+        {% set categories_seen = [] %}
+        {% for r in rules %}
+          {% if r.category not in categories_seen %}
+            {% if categories_seen.append(r.category) %}{% endif %}
+            <div class="mb-3">
+              <div class="cat-group-header">{{ r.category }}</div>
+              <div class="d-flex flex-wrap gap-1 mt-1">
+                {% for rr in rules if rr.category == r.category %}
+                <div class="d-inline-flex align-items-center gap-1 border rounded px-2 py-1 bg-light">
+                  <span class="small">{{ rr.keyword }}</span>
+                  <form method="post" action="{{ url_for('delete_category_rule', rule_id=rr.id) }}" class="d-inline">
+                    <button class="btn btn-xs text-danger border-0 bg-transparent p-0 ms-1" title="Remove">
+                      <i class="bi bi-x-circle"></i>
+                    </button>
+                  </form>
+                </div>
+                {% endfor %}
+              </div>
+            </div>
+          {% endif %}
+        {% else %}
+          <div class="text-center text-muted py-4">
+            No rules yet. Add one above or click <strong>Import Web Categories</strong>.
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

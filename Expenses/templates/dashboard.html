@@ -1,0 +1,384 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — Expenses Tracker{% endblock %}
+
+{% block content %}
+
+{# ── INR Rate Prompt Modal ─────────────────────────────────────────────────── #}
+{% if inr_prompt %}
+{% set p_year, p_month, p_label, p_rate = inr_prompt %}
+<div class="modal fade show d-block" id="inrRateModal" tabindex="-1" style="background:rgba(0,0,0,.5)">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header border-0 pb-1">
+        <h5 class="modal-title"><i class="bi bi-currency-exchange me-2 text-warning"></i>Set INR Rate — {{ p_label }}</h5>
+      </div>
+      <div class="modal-body">
+        <p class="text-muted small mb-3">
+          You have INR transactions from <strong>{{ p_label }}</strong>. Enter the average USD per 1 INR rate
+          for that month so your amounts are accurate.<br>
+          <span class="text-muted">Current rate being used: <code>{{ p_rate }}</code>
+          (₹1 = ${{ "%.4f"|format(p_rate) }} → $1 ≈ ₹{{ "%.0f"|format(1/p_rate) }})</span>
+        </p>
+        <form method="post" action="{{ url_for('inr_rate_confirm') }}" id="inrRateForm">
+          <input type="hidden" name="year"  value="{{ p_year }}">
+          <input type="hidden" name="month" value="{{ p_month }}">
+          <input type="hidden" name="action" value="save">
+          <div class="input-group">
+            <span class="input-group-text">₹1 =</span>
+            <input type="number" name="rate" step="0.000001" min="0.000001"
+                   class="form-control" placeholder="e.g. 0.011696"
+                   value="{{ p_rate }}" required>
+            <span class="input-group-text">USD</span>
+          </div>
+          <div class="text-muted small mt-1">
+            Tip: Google "<strong>INR USD {{ p_label }}</strong>" → take the average. e.g. $1=₹85.5 → rate = 0.011696
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer border-0 pt-1">
+        <form method="post" action="{{ url_for('inr_rate_confirm') }}">
+          <input type="hidden" name="year"   value="{{ p_year }}">
+          <input type="hidden" name="month"  value="{{ p_month }}">
+          <input type="hidden" name="action" value="dismiss">
+          <button class="btn btn-sm btn-outline-secondary">Remind me later</button>
+        </form>
+        <button class="btn btn-sm btn-warning" form="inrRateForm" type="submit">
+          <i class="bi bi-check-lg me-1"></i>Save &amp; Re-convert
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
+  <h1 class="page-title mb-0">
+    <i class="bi bi-speedometer2 me-2"></i>{{ period_label }}
+  </h1>
+  <a href="{{ url_for('upload') }}" class="btn btn-primary btn-sm">
+    <i class="bi bi-cloud-upload me-1"></i>Upload Statement
+  </a>
+</div>
+
+{# ── Period Selector ─────────────────────────────────────────── #}
+<div class="period-bar mb-4">
+  <div class="d-flex gap-2 flex-wrap align-items-center">
+    <a href="{{ url_for('dashboard', month=current_month, year=current_year) }}"
+       class="btn btn-sm {% if month == current_month and year == current_year %}btn-primary{% else %}btn-outline-secondary{% endif %}">
+      <i class="bi bi-calendar-check me-1"></i>This Month
+    </a>
+    <a href="{{ url_for('dashboard', month=0, year=current_year) }}"
+       class="btn btn-sm {% if month == 0 and year == current_year %}btn-primary{% else %}btn-outline-secondary{% endif %}">
+      <i class="bi bi-calendar3 me-1"></i>This Year
+    </a>
+    {% for y in available_years %}
+      {% if y|int != current_year %}
+      <a href="{{ url_for('dashboard', month=0, year=y) }}"
+         class="btn btn-sm {% if month == 0 and year == y|int %}btn-primary{% else %}btn-outline-secondary{% endif %}">
+        {{ y }}
+      </a>
+      {% endif %}
+    {% endfor %}
+    <div class="vr mx-1"></div>
+    <form method="get" class="d-flex gap-1 align-items-center">
+      {% set mnames = ['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'] %}
+      <select name="month" class="form-select form-select-sm" style="width:110px">
+        <option value="0" {% if month==0 %}selected{% endif %}>All months</option>
+        {% for m in range(1,13) %}
+          <option value="{{ m }}" {% if m==month %}selected{% endif %}>{{ mnames[m] }}</option>
+        {% endfor %}
+      </select>
+      <input type="number" name="year" value="{{ year }}" class="form-control form-control-sm" style="width:80px" min="2000" max="2099">
+      <button class="btn btn-sm btn-outline-primary" type="submit">Go</button>
+    </form>
+  </div>
+</div>
+
+{# ── 5 Stat Cards ────────────────────────────────────────────── #}
+{% set charges  = period_totals.debits %}
+{% set payments = period_totals.payments %}
+{% set refunds  = period_totals.refunds %}
+{% set wasted   = period_totals.wasted %}
+
+<div class="row g-3 mb-3">
+
+  <div class="col-6 col-md-4">
+    <a href="{{ url_for('transactions', month=month, year=year, txn_type='debit') }}" class="text-decoration-none">
+      <div class="stat-card h-100" style="border-left:4px solid #ef4444;cursor:pointer">
+        <div class="stat-label"><i class="bi bi-credit-card me-1"></i>Charges</div>
+        <div class="stat-value">${{ "%.2f"|format(charges) }}</div>
+        <div class="stat-sub text-primary small">View all →</div>
+      </div>
+    </a>
+  </div>
+
+  <div class="col-6 col-md-4">
+    <a href="{{ url_for('transactions', month=month, year=year, category='Payments') }}" class="text-decoration-none">
+      <div class="stat-card h-100" style="border-left:4px solid #22c55e;cursor:pointer">
+        <div class="stat-label"><i class="bi bi-arrow-return-left me-1"></i>Payments</div>
+        <div class="stat-value text-success">${{ "%.2f"|format(payments) }}</div>
+        <div class="stat-sub text-primary small">View all →</div>
+      </div>
+    </a>
+  </div>
+
+  <div class="col-6 col-md-4">
+    <a href="{{ url_for('transactions', month=month, year=year, category='Refunds') }}" class="text-decoration-none">
+      <div class="stat-card h-100" style="border-left:4px solid #06b6d4;cursor:pointer">
+        <div class="stat-label"><i class="bi bi-arrow-clockwise me-1"></i>Refunds</div>
+        <div class="stat-value text-info">${{ "%.2f"|format(refunds) }}</div>
+        <div class="stat-sub text-primary small">View all →</div>
+      </div>
+    </a>
+  </div>
+
+  <div class="col-6 col-md-4">
+    <a href="{{ url_for('transactions', month=month, year=year, is_wasted=1) }}" class="text-decoration-none">
+      <div class="stat-card wasted h-100" style="cursor:pointer">
+        <div class="stat-label"><i class="bi bi-exclamation-triangle me-1"></i>Wasted</div>
+        <div class="stat-value">${{ "%.2f"|format(wasted) }}</div>
+        <div class="stat-sub">
+          {% if charges > 0 %}{{ "%.1f"|format(wasted/charges*100) }}% of charges{% endif %}
+        </div>
+      </div>
+    </a>
+  </div>
+
+</div>
+
+{# ── Info banners ─────────────────────────────────────────────── #}
+{% if period_totals.loans > 0 %}
+<div class="alert alert-warning py-2 mb-3 small">
+  <i class="bi bi-cash-stack me-1"></i>
+  <strong>Loan/Transfer:</strong> ${{ "%.2f"|format(period_totals.loans) }} detected this period.
+</div>
+{% endif %}
+
+<div class="row g-4 mb-4">
+
+  {# ── Spend by Account ──────────────────────────────────────── #}
+  <div class="col-lg-5">
+    <div class="card-panel h-100">
+      <div class="panel-header"><i class="bi bi-credit-card me-2"></i>Spend by Account</div>
+      {% if account_breakdown %}
+      <div class="table-responsive">
+        <table class="table table-sm mb-0">
+          <thead>
+            <tr>
+              <th>Account</th>
+              <th class="text-end">Charges</th>
+              <th class="text-end text-success">Paid</th>
+              <th class="text-end">Net</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for a in account_breakdown %}
+            {% if a.total > 0 or a.credits > 0 %}
+            {% set a_net = a.total - a.credits %}
+            <tr>
+              <td>
+                <a href="{{ url_for('transactions', month=month, year=year, account_id=a.id) }}"
+                   class="text-decoration-none fw-semibold">{{ a.name }}</a>
+                <div><span class="badge-acct {{ a.type }}">{{ a.type }}</span></div>
+              </td>
+              <td class="text-end">
+                ${{ "%.2f"|format(a.total) }}
+                {% if a.has_inr and a.inr_charges > 0 %}
+                <br><small class="text-muted">₹{{ "{:,.0f}".format(a.inr_charges) }}</small>
+                {% endif %}
+              </td>
+              <td class="text-end text-success">
+                {% if a.credits > 0 %}
+                  <small>${{ "%.2f"|format(a.credits) }}</small>
+                  {% if a.has_inr and a.inr_credits > 0 %}
+                  <br><small class="text-muted">₹{{ "{:,.0f}".format(a.inr_credits) }}</small>
+                  {% endif %}
+                {% else %}<span class="text-muted">—</span>{% endif %}
+              </td>
+              <td class="text-end fw-bold">${{ "%.2f"|format(a_net) }}</td>
+            </tr>
+            {% endif %}
+            {% endfor %}
+          </tbody>
+          <tfoot>
+            <tr class="table-active fw-bold">
+              <td>Total (USD)</td>
+              <td class="text-end">${{ "%.2f"|format(charges) }}</td>
+              <td class="text-end text-success">${{ "%.2f"|format(period_totals.credits) }}</td>
+              <td class="text-end">${{ "%.2f"|format(charges - period_totals.credits) }}</td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+      {% else %}
+      <div class="empty-state">
+        <i class="bi bi-inbox display-6 d-block mb-2 text-muted"></i>
+        No data for this period.
+        <a href="{{ url_for('upload') }}" class="d-block mt-2 btn btn-sm btn-primary">Upload Statement</a>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  {# ── Category Breakdown ────────────────────────────────────── #}
+  <div class="col-lg-7">
+    <div class="card-panel h-100">
+      <div class="panel-header">
+        <i class="bi bi-pie-chart me-2"></i>Charges by Category
+        <small class="text-muted fw-normal ms-1">— purchases only</small>
+      </div>
+      {% if category_breakdown %}
+      <div class="row align-items-center">
+        <div class="col-5">
+          <canvas id="categoryChart" height="200"></canvas>
+        </div>
+        <div class="col-7">
+          <div style="max-height:230px;overflow-y:auto">
+            <table class="table table-sm mb-0">
+              <tbody>
+                {% for c in category_breakdown %}
+                <tr {% if c.category == 'Wasted' %}class="wasted-row"{% endif %}>
+                  <td>
+                    {% if c.category == 'Wasted' %}
+                      <i class="bi bi-exclamation-triangle text-danger me-1"></i>
+                    {% else %}
+                      <i class="bi bi-circle-fill me-1" style="font-size:.45rem;color:#3b82f6;vertical-align:middle"></i>
+                    {% endif %}
+                    <a href="{{ url_for('transactions', month=month, year=year, category=c.category) }}"
+                       class="text-decoration-none text-dark">{{ c.category }}</a>
+                    <small class="text-muted">({{ c.count }})</small>
+                  </td>
+                  <td class="text-end fw-semibold">
+                    ${{ "%.2f"|format(c.total) }}
+                    {% if charges > 0 %}
+                    <br><small class="text-muted">{{ "%.0f"|format(c.total/charges*100) }}%</small>
+                    {% endif %}
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      {% else %}
+      <div class="empty-state">No spending data yet.</div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+{# ── Monthly Trend ──────────────────────────────────────────── #}
+<div class="card-panel mb-4">
+  <div class="panel-header d-flex justify-content-between align-items-center">
+    <span><i class="bi bi-bar-chart-line me-2"></i>Monthly Charges — {{ year }}</span>
+    <small class="text-muted fw-normal">Charges vs Wasted spend</small>
+  </div>
+  <canvas id="monthlyChart" height="110"></canvas>
+</div>
+
+{# ── Recent Transactions ──────────────────────────────────────── #}
+{% if recent_txns %}
+<div class="card-panel">
+  <div class="panel-header d-flex justify-content-between align-items-center">
+    <span><i class="bi bi-clock-history me-2"></i>Recent Transactions</span>
+    <a href="{{ url_for('transactions', month=month, year=year) }}" class="btn btn-sm btn-outline-secondary">
+      View all <i class="bi bi-arrow-right"></i>
+    </a>
+  </div>
+  <div class="table-responsive">
+    <table class="table table-sm table-hover mb-0">
+      <thead>
+        <tr><th>Date</th><th>Account</th><th>Description</th><th>Category</th><th class="text-end">Amount</th></tr>
+      </thead>
+      <tbody>
+        {% for t in recent_txns %}
+        <tr {% if t.is_wasted %}class="wasted-row"{% endif %}>
+          <td class="text-nowrap">{{ t.date }}</td>
+          <td><small class="text-muted">{{ t.account_name }}</small></td>
+          <td>{{ t.description[:50] }}{% if t.description|length > 50 %}…{% endif %}</td>
+          <td>
+            {% if t.is_wasted %}
+              <span class="badge bg-danger">Wasted</span>
+            {% elif t.category == 'Payments' %}
+              <span class="badge bg-success">Payment</span>
+            {% elif t.category == 'Refunds' %}
+              <span class="badge bg-info text-dark">Refund</span>
+            {% elif t.txn_type == 'credit' %}
+              <span class="badge bg-success">Payment/Refund</span>
+            {% else %}
+              <span class="badge-cat">{{ t.category }}</span>
+            {% endif %}
+          </td>
+          <td class="text-end fw-semibold">
+            {% if t.txn_type == 'credit' %}
+              <span class="text-success">+${{ "%.2f"|format(t.amount) }}</span>
+            {% else %}
+              ${{ "%.2f"|format(t.amount) }}
+            {% endif %}
+            {% if t.orig_currency == 'INR' %}
+              <br><small class="text-muted">₹{{ "{:,.0f}".format(t.orig_amount) }}</small>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
+
+{# ── Manage Accounts ───────────────────────────────────────────── #}
+<div class="card-panel mt-4">
+  <div class="panel-header d-flex justify-content-between align-items-center">
+    <span><i class="bi bi-bank me-2"></i>Manage Accounts</span>
+    <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="collapse" data-bs-target="#manageAccounts">
+      <i class="bi bi-gear me-1"></i>Manage
+    </button>
+  </div>
+  <div class="collapse" id="manageAccounts">
+    <form method="post" action="{{ url_for('add_account') }}" class="mb-3 p-2 bg-light rounded">
+      <div class="row g-2 align-items-end">
+        <div class="col-5">
+          <input type="text" name="name" class="form-control form-control-sm" placeholder="Account name" required>
+        </div>
+        <div class="col-4">
+          <select name="type" class="form-select form-select-sm">
+            <option value="credit">Credit Card</option>
+            <option value="bank">Bank Account</option>
+            <option value="debit">Debit Card</option>
+          </select>
+        </div>
+        <div class="col-3">
+          <button class="btn btn-sm btn-primary w-100">Add</button>
+        </div>
+      </div>
+    </form>
+    {% if accounts %}
+    <ul class="list-group list-group-flush">
+      {% for a in accounts %}
+      <li class="list-group-item d-flex justify-content-between align-items-center py-2 px-2">
+        <span>
+          <span class="badge-acct {{ a.type }} me-2">{{ a.type }}</span>
+          {{ a.name }}
+        </span>
+        <form method="post" action="{{ url_for('delete_account', account_id=a.id) }}"
+              onsubmit="return confirm('Delete {{ a.name }} and ALL its transactions?')">
+          <button class="btn btn-xs btn-outline-danger"><i class="bi bi-trash"></i></button>
+        </form>
+      </li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+const categoryData = {{ category_breakdown | tojson }};
+const monthlyData  = {{ monthly_summary | tojson }};
+initDashboardCharts(categoryData, monthlyData);
+</script>
+{% endblock %}

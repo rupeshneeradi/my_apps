@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+{% block title %}Upload Statement — Expenses Tracker{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center mb-4">
+  <h1 class="page-title mb-0"><i class="bi bi-cloud-upload me-2"></i>Upload Statement</h1>
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-7">
+    <div class="card-panel">
+      <div class="panel-header"><i class="bi bi-file-earmark-spreadsheet me-2"></i>Import CSV File</div>
+      <form method="post" enctype="multipart/form-data" id="uploadForm">
+        <!-- Account selection -->
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Select Account</label>
+          {% if accounts %}
+            <select name="account_id" id="accountSelect" class="form-select">
+              <option value="">— Create new account below —</option>
+              {% for a in accounts %}
+                <option value="{{ a.id }}">{{ a.name }} ({{ a.type }})</option>
+              {% endfor %}
+            </select>
+            <small class="text-muted">Or leave blank to create a new account below.</small>
+          {% else %}
+            <div class="alert alert-info py-2">No accounts yet — create one below.</div>
+          {% endif %}
+        </div>
+
+        <!-- New account -->
+        <div class="mb-3 p-3 bg-light rounded border">
+          <label class="form-label fw-semibold">New Account (optional)</label>
+          <div class="row g-2">
+            <div class="col-8">
+              <input type="text" name="new_account" class="form-control" placeholder="e.g. Chase Sapphire, BofA Checking">
+            </div>
+            <div class="col-4">
+              <select name="account_type" class="form-select">
+                <option value="credit">Credit Card</option>
+                <option value="bank">Bank Account</option>
+                <option value="debit">Debit Card</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Currency -->
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Statement Currency</label>
+          <select name="currency" class="form-select">
+            <option value="USD" selected>USD — US Dollar</option>
+            <option value="INR">INR — Indian Rupee (auto-converted to USD)</option>
+          </select>
+          <small class="text-muted">Choose the currency your statement is in. INR amounts are converted to USD at the stored exchange rate.</small>
+        </div>
+
+        <!-- File upload -->
+        <div class="mb-4">
+          <label class="form-label fw-semibold">Statement File(s)</label>
+          <div class="upload-drop-zone" id="dropZone">
+            <i class="bi bi-file-earmark-arrow-up display-4 text-muted d-block mb-2"></i>
+            <p class="mb-1 text-muted">Drag & drop files here, or click to browse</p>
+            <div class="d-flex gap-2 justify-content-center mt-2">
+              <span class="badge bg-success">CSV</span>
+              <span class="badge bg-danger">PDF</span>
+              <span class="badge bg-primary">Excel (.xlsx / .xls)</span>
+            </div>
+            <small class="text-muted d-block mt-2">Multiple files allowed • Max 16 MB each</small>
+            <input type="file" name="statements" id="fileInput" accept=".csv,.pdf,.xlsx,.xls" multiple class="d-none">
+          </div>
+          <div id="fileList" class="mt-2"></div>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-lg w-100">
+          <i class="bi bi-upload me-2"></i>Import Transactions
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <div class="col-lg-5">
+    <!-- Supported formats -->
+    <div class="card-panel mb-3">
+      <div class="panel-header"><i class="bi bi-info-circle me-2"></i>Supported Formats</div>
+      <p class="text-muted small mb-3">CSV, PDF, and Excel statements are auto-detected. Common banks supported:</p>
+      <ul class="list-unstyled small">
+        {% for bank in [
+          ('Chase', 'CSV / PDF'),
+          ('Bank of America', 'CSV / PDF'),
+          ('Capital One', 'CSV / PDF'),
+          ('Wells Fargo', 'CSV / PDF'),
+          ('Citi', 'CSV / PDF'),
+          ('Discover', 'CSV / PDF'),
+          ('American Express', 'CSV / PDF / Excel'),
+          ('Any bank export', 'CSV, XLSX, XLS, PDF'),
+        ] %}
+        <li class="mb-1">
+          <i class="bi bi-check-circle-fill text-success me-2"></i>
+          <strong>{{ bank[0] }}</strong> — <span class="text-muted">{{ bank[1] }}</span>
+        </li>
+        {% endfor %}
+      </ul>
+    </div>
+
+    <!-- Tips -->
+    <div class="card-panel">
+      <div class="panel-header"><i class="bi bi-lightbulb me-2"></i>Tips</div>
+      <ul class="small text-muted mb-0">
+        <li class="mb-2">Download your statement as <strong>CSV</strong> from your bank's website under "Download / Export".</li>
+        <li class="mb-2">Transactions are <strong>auto-categorized</strong> based on description keywords.</li>
+        <li class="mb-2"><strong>Duplicates are skipped</strong> automatically — safe to re-upload the same file.</li>
+        <li class="mb-2">Credits and refunds are automatically excluded.</li>
+        <li>After import, visit <a href="{{ url_for('categories') }}">Categories</a> to tune rules.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const dropZone = document.getElementById('dropZone');
+const fileInput = document.getElementById('fileInput');
+const fileList  = document.getElementById('fileList');
+
+dropZone.addEventListener('click', () => fileInput.click());
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('dragover'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+dropZone.addEventListener('drop', e => {
+  e.preventDefault();
+  dropZone.classList.remove('dragover');
+  fileInput.files = e.dataTransfer.files;
+  showFiles(fileInput.files);
+});
+fileInput.addEventListener('change', () => showFiles(fileInput.files));
+
+function showFiles(files) {
+  fileList.innerHTML = Array.from(files).map(f =>
+    `<div class="badge bg-secondary me-1 mb-1"><i class="bi bi-file-earmark-text me-1"></i>${f.name}</div>`
+  ).join('');
+}
+</script>
+{% endblock %}

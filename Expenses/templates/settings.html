@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+{% block title %}Settings — Expenses Tracker{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center mb-4">
+  <h1 class="page-title mb-0"><i class="bi bi-gear me-2"></i>Settings</h1>
+</div>
+
+<div class="row g-4">
+  <!-- Global INR rate -->
+  <div class="col-lg-5">
+    <div class="card-panel">
+      <div class="panel-header"><i class="bi bi-currency-exchange me-2"></i>Global INR → USD Rate</div>
+      <form method="post">
+        <input type="hidden" name="action" value="global">
+        <div class="mb-3">
+          <div class="input-group">
+            <span class="input-group-text">1 INR =</span>
+            <input type="number" name="inr_usd_rate" class="form-control"
+                   value="{{ inr_rate }}" step="0.000001" min="0.000001" required>
+            <span class="input-group-text">USD</span>
+          </div>
+          <small class="text-muted">
+            Current: <strong>₹1 = ${{ "%.6f"|format(inr_rate) }}</strong> &nbsp;|&nbsp;
+            <a href="https://www.google.com/search?q=INR+to+USD" target="_blank">Check live rate ↗</a>
+          </small>
+        </div>
+        <div class="alert alert-info py-2 small mb-3">
+          <i class="bi bi-info-circle me-1"></i>
+          This is the <strong>fallback</strong> rate used when no monthly override exists.
+          Changing it does <strong>not</strong> retroactively update already-imported transactions.
+        </div>
+        <button class="btn btn-primary btn-sm" type="submit">
+          <i class="bi bi-save me-1"></i>Save Global Rate
+        </button>
+      </form>
+    </div>
+
+    <!-- About -->
+    <div class="card-panel mt-3">
+      <div class="panel-header"><i class="bi bi-info-circle me-2"></i>About</div>
+      <ul class="list-unstyled small text-muted mb-0">
+        <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>All data stored locally — nothing shared externally.</li>
+        <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>Database: <code>data/expenses.db</code></li>
+        <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>Reports: <code>monthly_reports/</code></li>
+        <li><i class="bi bi-check-circle-fill text-success me-2"></i>Run <code>python3 manage.py reset-db</code> to clear all transactions.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Monthly rate overrides -->
+  <div class="col-lg-7">
+    <div class="card-panel">
+      <div class="panel-header"><i class="bi bi-calendar3 me-2"></i>Monthly INR Rate Overrides
+        <small class="text-muted fw-normal ms-2">— used at import time for each transaction's month</small>
+      </div>
+
+      <form method="post" class="mb-4">
+        <input type="hidden" name="action" value="monthly">
+        <div class="row g-2 align-items-end">
+          <div class="col-3">
+            <label class="form-label small mb-1">Year</label>
+            <input type="number" name="m_year" class="form-control form-control-sm"
+                   placeholder="2025" min="2020" max="2099" required>
+          </div>
+          <div class="col-3">
+            <label class="form-label small mb-1">Month</label>
+            <select name="m_month" class="form-select form-select-sm" required>
+              {% set mnames=['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'] %}
+              {% for m in range(1,13) %}
+                <option value="{{ m }}">{{ mnames[m] }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-4">
+            <label class="form-label small mb-1">Rate (1 INR = ? USD)</label>
+            <input type="number" name="m_rate" class="form-control form-control-sm"
+                   placeholder="0.011850" step="0.000001" min="0.000001" required>
+          </div>
+          <div class="col-2">
+            <button class="btn btn-sm btn-primary w-100" type="submit">Add</button>
+          </div>
+        </div>
+      </form>
+
+      {% if monthly_rates %}
+        <table class="table table-sm mb-0">
+          <thead><tr><th>Period</th><th>Rate (1 INR = USD)</th><th></th></tr></thead>
+          <tbody>
+            {% for r in monthly_rates %}
+            <tr>
+              <td>{{ r.year }}-{{ r.month }}</td>
+              <td><code>{{ r.rate }}</code></td>
+              <td>
+                <form method="post" class="d-inline">
+                  <input type="hidden" name="action" value="delete_monthly">
+                  <input type="hidden" name="key" value="{{ r.key }}">
+                  <button class="btn btn-xs btn-outline-danger"><i class="bi bi-trash"></i></button>
+                </form>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <p class="text-muted small mb-0">No monthly overrides yet — global rate is used for all months.</p>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

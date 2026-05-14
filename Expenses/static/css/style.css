@@ -1,0 +1,202 @@
+/* ── Variables ─────────────────────────────────────────────── */
+:root {
+  --navy:   #16213e;
+  --blue:   #0f3460;
+  --accent: #e94560;
+  --green:  #27ae60;
+  --bg:     #f0f2f5;
+  --card:   #ffffff;
+  --border: #e2e8f0;
+  --text:   #2d3748;
+  --muted:  #718096;
+}
+
+/* ── Base ──────────────────────────────────────────────────── */
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-size: 14px;
+}
+
+/* ── Navbar ────────────────────────────────────────────────── */
+.navbar {
+  background: linear-gradient(135deg, var(--navy) 0%, var(--blue) 100%);
+  box-shadow: 0 2px 12px rgba(0,0,0,.25);
+  padding: .6rem 0;
+}
+.navbar-brand { font-size: 1.1rem; letter-spacing: .3px; }
+.nav-link {
+  color: rgba(255,255,255,.8) !important;
+  border-radius: 8px;
+  padding: .4rem .75rem !important;
+  transition: background .15s, color .15s;
+}
+.nav-link:hover, .nav-link.active {
+  background: rgba(255,255,255,.15);
+  color: #fff !important;
+}
+
+/* ── Page title ────────────────────────────────────────────── */
+.page-title {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--navy);
+}
+
+/* ── Stat cards ────────────────────────────────────────────── */
+.stat-card {
+  background: var(--card);
+  border-radius: 14px;
+  padding: 1.2rem 1.4rem;
+  border: 1px solid var(--border);
+  box-shadow: 0 2px 8px rgba(0,0,0,.05);
+}
+.stat-card.wasted {
+  border-left: 4px solid var(--accent);
+  background: linear-gradient(135deg, #fff5f5 0%, #fff 100%);
+}
+.stat-label {
+  font-size: .75rem;
+  text-transform: uppercase;
+  letter-spacing: .8px;
+  color: var(--muted);
+  font-weight: 600;
+  margin-bottom: .3rem;
+}
+.stat-value {
+  font-size: 1.7rem;
+  font-weight: 800;
+  color: var(--navy);
+  line-height: 1.1;
+}
+.stat-card.wasted .stat-value { color: var(--accent); }
+.stat-sub { font-size: .75rem; color: var(--muted); margin-top: .2rem; }
+
+/* ── Card panel ────────────────────────────────────────────── */
+.card-panel {
+  background: var(--card);
+  border-radius: 14px;
+  padding: 1.2rem;
+  border: 1px solid var(--border);
+  box-shadow: 0 2px 8px rgba(0,0,0,.04);
+}
+.panel-header {
+  font-size: .85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .6px;
+  color: var(--navy);
+  margin-bottom: 1rem;
+  padding-bottom: .5rem;
+  border-bottom: 2px solid var(--bg);
+}
+
+/* ── Tables ────────────────────────────────────────────────── */
+.table { font-size: .875rem; }
+.table thead th {
+  background: var(--bg);
+  color: var(--muted);
+  font-weight: 700;
+  font-size: .75rem;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  border-bottom: 1px solid var(--border);
+  padding: .6rem .8rem;
+}
+.table td { padding: .6rem .8rem; vertical-align: middle; }
+.table-hover tbody tr:hover td { background: #f7faff; }
+
+/* Wasted rows */
+.wasted-row td {
+  background: #fff5f5 !important;
+  color: #c0392b;
+}
+.wasted-row:hover td { background: #ffe8e8 !important; }
+
+/* ── Badges ────────────────────────────────────────────────── */
+.badge-cat {
+  display: inline-block;
+  background: #edf2ff;
+  color: #3730a3;
+  border-radius: 20px;
+  padding: .2rem .65rem;
+  font-size: .72rem;
+  font-weight: 600;
+}
+.badge-acct {
+  display: inline-block;
+  border-radius: 20px;
+  padding: .15rem .55rem;
+  font-size: .7rem;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+.badge-acct.credit  { background: #e8f4fd; color: #1a6fa8; }
+.badge-acct.bank    { background: #e8fdf1; color: #1a7a50; }
+.badge-acct.debit   { background: #fdf5e8; color: #8a5a00; }
+
+/* ── Buttons ───────────────────────────────────────────────── */
+.btn-primary {
+  background: linear-gradient(135deg, var(--blue), var(--navy));
+  border: none;
+}
+.btn-primary:hover { background: linear-gradient(135deg, #1a4a8a, var(--blue)); }
+.btn-xs {
+  padding: .15rem .4rem;
+  font-size: .72rem;
+  border-radius: 6px;
+  line-height: 1.4;
+}
+
+/* ── Upload drop zone ──────────────────────────────────────── */
+.upload-drop-zone {
+  border: 2px dashed var(--border);
+  border-radius: 14px;
+  padding: 2.5rem 1rem;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color .2s, background .2s;
+  background: #fafbff;
+}
+.upload-drop-zone:hover,
+.upload-drop-zone.dragover {
+  border-color: var(--blue);
+  background: #eef3ff;
+}
+
+/* ── Category rule groups ──────────────────────────────────── */
+.cat-group-header {
+  font-size: .75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  color: var(--muted);
+  border-bottom: 1px solid var(--border);
+  padding-bottom: .25rem;
+  margin-bottom: .4rem;
+}
+
+/* ── Wasted keyword rows ───────────────────────────────────── */
+.wasted-kw-row { background: #fff5f5; }
+
+/* ── Empty state ───────────────────────────────────────────── */
+.empty-state {
+  text-align: center;
+  padding: 2rem 1rem;
+  color: var(--muted);
+}
+
+/* ── Period bar ────────────────────────────────────────────── */
+.period-bar {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: .65rem 1rem;
+  box-shadow: 0 1px 4px rgba(0,0,0,.04);
+}
+.period-bar .btn { font-size: .78rem; }
+
+/* ── Scrollbar ─────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #cbd5e0; border-radius: 4px; }
