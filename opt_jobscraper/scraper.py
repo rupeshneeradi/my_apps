@@ -52,11 +52,11 @@ def _is_recent(posted: str, days: int = DAYS_LOOKBACK) -> bool:
         return True
 
 
-def scrape_query(job_type: str, query: str, portals: list[str] = PORTALS) -> list[dict]:
-    log.info("[scrape] '%s' on %s", query, portals)
+def _scrape_one_portal(portal: str, query: str) -> pd.DataFrame:
+    """Scrape a single portal — returns empty DataFrame on failure."""
     try:
-        df = scrape_jobs(
-            site_name=portals,
+        return scrape_jobs(
+            site_name=[portal],
             search_term=query,
             location=LOCATION,
             results_wanted=RESULTS_PER_QUERY,
@@ -65,19 +65,32 @@ def scrape_query(job_type: str, query: str, portals: list[str] = PORTALS) -> lis
             linkedin_fetch_description=True,
         )
     except Exception as exc:
-        log.error("[scrape] query='%s' failed: %s", query, exc)
+        log.warning("[scrape] %s / '%s' failed: %s", portal, query[:40], exc)
+        return pd.DataFrame()
+
+
+def scrape_query(job_type: str, query: str, portals: list[str] = PORTALS) -> list[dict]:
+    log.info("[scrape] '%s'", query)
+
+    # Scrape each portal individually so one bad site never kills the rest
+    frames = [f for f in (_scrape_one_portal(p, query) for p in portals) if not f.empty]
+    if not frames:
+        return []
+    df = pd.concat(frames, ignore_index=True)
+
+    if df.empty:
         return []
 
     jobs = []
     for _, row in df.iterrows():
-        title   = _clean(row.get("title"))
-        company = _clean(row.get("company"))
-        loc     = _clean(row.get("location"))
-        url     = _clean(row.get("job_url"))
-        desc    = _strip_html(_clean(row.get("description")))
-        posted  = _posted_date(row.get("date_posted"))
-        portal  = _clean(row.get("site", ""))
-        remote  = str(row.get("is_remote", "")).lower() == "true"
+        title    = _clean(row.get("title"))
+        company  = _clean(row.get("company"))
+        loc      = _clean(row.get("location"))
+        url      = _clean(row.get("job_url"))
+        desc     = _strip_html(_clean(row.get("description")))
+        posted   = _posted_date(row.get("date_posted"))
+        portal   = _clean(row.get("site", ""))
+        remote   = str(row.get("is_remote", "")).lower() == "true"
         emp_type = _clean(row.get("job_type", ""))
 
         if not title or not url:

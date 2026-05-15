@@ -7,7 +7,8 @@ load_dotenv()
 VERSION = "1.0.0"
 
 # ── Portals ───────────────────────────────────────────────────────────────────
-PORTALS = ["dice", "linkedin", "indeed", "zip_recruiter", "glassdoor"]
+# zip_recruiter → 403 blocked; glassdoor → 400 location parse error; dice → KeyError
+PORTALS = ["linkedin", "indeed"]
 
 RESULTS_PER_QUERY = 30
 DAYS_LOOKBACK     = 3
