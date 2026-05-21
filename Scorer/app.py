@@ -16,6 +16,12 @@ from analyzer import analyze
 from writer import generate_resume_content
 from scraper import fetch_real_examples
 from docx_report import generate_report_docx
+from tracker import init_db, add_application, list_applications, update_application, delete_application, get_stats
+from gap_analyzer import analyze_gap, AVAILABLE_ROLES
+from builder_docx import generate_resume_docx
+
+# Ensure tracker DB is ready on startup
+init_db()
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
 log = logging.getLogger(__name__)
@@ -209,6 +215,86 @@ def download_report():
         mimetype="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
         as_attachment=True,
         download_name=filename,
+    )
+
+
+# ── Job Tracker API ───────────────────────────────────────────────────────────
+
+@app.route("/api/tracker/list")
+def tracker_list():
+    status = request.args.get("status") or None
+    apps = list_applications(status)
+    return jsonify({"applications": apps, "total": len(apps)})
+
+
+@app.route("/api/tracker/add", methods=["POST"])
+def tracker_add():
+    data = request.get_json(silent=True) or {}
+    if not data.get("company") and not data.get("role"):
+        return jsonify({"error": "Company or role is required"}), 400
+    result = add_application(data)
+    return jsonify({"application": result})
+
+
+@app.route("/api/tracker/update/<int:app_id>", methods=["PUT", "PATCH"])
+def tracker_update(app_id):
+    data = request.get_json(silent=True) or {}
+    updated = update_application(app_id, data)
+    if not updated:
+        return jsonify({"error": "Not found"}), 404
+    return jsonify({"application": updated})
+
+
+@app.route("/api/tracker/delete/<int:app_id>", methods=["DELETE"])
+def tracker_delete(app_id):
+    delete_application(app_id)
+    return jsonify({"ok": True})
+
+
+@app.route("/api/tracker/stats")
+def tracker_stats():
+    return jsonify(get_stats())
+
+
+# ── Gap Analyzer API ──────────────────────────────────────────────────────────
+
+@app.route("/api/gap/analyze", methods=["POST"])
+def gap_analyze():
+    data   = request.get_json(silent=True) or {}
+    role   = (data.get("role") or "").strip()
+    raw    = data.get("skills") or ""
+    skills = raw if isinstance(raw, list) else [
+        s.strip() for s in re.split(r"[,\n;]", str(raw)) if s.strip()
+    ]
+    if not role:
+        return jsonify({"error": "Target role is required"}), 400
+    result = analyze_gap(role, skills)
+    return jsonify(result)
+
+
+@app.route("/api/gap/roles")
+def gap_roles():
+    return jsonify({"roles": AVAILABLE_ROLES})
+
+
+# ── Resume Builder API ────────────────────────────────────────────────────────
+
+@app.route("/api/builder/generate", methods=["POST"])
+def builder_generate():
+    data = request.get_json(silent=True) or {}
+    try:
+        docx_bytes = generate_resume_docx(data)
+    except Exception as e:
+        log.error("Builder DOCX error: %s", e)
+        return jsonify({"error": f"Could not generate resume: {e}"}), 500
+
+    name = ((data.get("personal") or {}).get("name") or "resume").strip()
+    safe = re.sub(r"[^\w\-.]", "_", name)
+    return send_file(
+        io.BytesIO(docx_bytes),
+        mimetype="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        as_attachment=True,
+        download_name=f"{safe}_resume.docx",
     )
 
 
