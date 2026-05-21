@@ -31,21 +31,43 @@ def check_opt(job: dict) -> tuple[bool, str, bool]:
     return True, "OPT eligible", opt_positive
 
 
+# Titles that look technical but are NOT engineering roles
+_NON_TECH_TITLE_SIGNALS = [
+    "sales", "account executive", "account manager", "business development",
+    "recruiter", "recruiting", "talent acquisition",
+    "marketing", "product manager", "project manager", "program manager",
+    "consultant manager", "practice manager", "delivery manager",
+    "hr ", "human resources", "finance", "legal", "compliance officer",
+    "customer success", "customer support", "solutions architect manager",
+]
+
+# At least one of these must appear in the title for the job to be kept
+_TECH_TITLE_REQUIRED = [
+    "devops", "dev ops", "cloud", "sre", "site reliability",
+    "platform engineer", "infrastructure", "mlops", "devsecops",
+    "kubernetes", "k8s", "ci/cd", "cicd",
+    "linux", "systems engineer", "build engineer", "release engineer",
+    "cloud security", "cloud architect", "cloud consultant",
+    "aws engineer", "azure engineer", "gcp engineer",
+    "network engineer", "cloud computing",
+]
+
+
 def check_relevance(job: dict) -> tuple[bool, str]:
     title = _norm(job["title"])
     desc  = _norm(job["description"])
 
-    TITLE_MUST_HAVE = [
-        "devops", "cloud", "sre", "reliability", "platform", "infrastructure",
-        "mlops", "devsecops", "kubernetes", "k8s", "ci/cd", "cicd",
-        "systems engineer", "linux engineer", "build engineer", "release engineer",
-        "security engineer", "network engineer",
-    ]
-    if not _contains_any(title, TITLE_MUST_HAVE):
-        return False, f"Title not DevOps-related: '{job['title']}'"
+    # Hard reject non-tech roles even if title has "cloud" or "devops" in suffix
+    if _contains_any(title, _NON_TECH_TITLE_SIGNALS):
+        return False, f"Non-tech title detected: '{job['title']}'"
 
+    # Title must contain at least one technical role keyword
+    if not _contains_any(title, _TECH_TITLE_REQUIRED):
+        return False, f"Title not tech DevOps/Cloud: '{job['title']}'"
+
+    # Description must have at least 3 DevOps/Cloud keywords (raised from 2)
     hits = sum(1 for kw in ALL_DEVOPS_KEYWORDS if kw in desc)
-    if hits < 2:
+    if hits < 3:
         return False, f"Description too sparse ({hits} keyword hits)"
 
     return True, f"Relevant ({hits} keyword hits)"

@@ -73,10 +73,12 @@ def scrape_query(job_type: str, query: str, portals: list[str] = PORTALS) -> lis
     log.info("[scrape] '%s'", query)
 
     # Scrape each portal individually so one bad site never kills the rest
-    frames = [f for f in (_scrape_one_portal(p, query) for p in portals) if not f.empty]
+    frames = [f.dropna(axis=1, how="all") for f in
+              (_scrape_one_portal(p, query) for p in portals)
+              if not f.empty]
     if not frames:
         return []
-    df = pd.concat(frames, ignore_index=True)
+    df = pd.concat(frames, ignore_index=True, join="outer")
 
     if df.empty:
         return []
