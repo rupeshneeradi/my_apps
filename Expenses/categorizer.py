@@ -31,10 +31,19 @@ WEB_CATEGORIES = {
         "expedia", "booking.com", "vrbo", "priceline", "kayak",
     ],
     "Gas & Auto": [
+        "shell", "chevron", "sunoco", "exxon", "mobil", "arco", "bp ",
+        "citgo", "valero", "marathon", "speedway", "circle k", "wawa",
+        "sheetz", "kwik trip", "quiktrip", "racetrac", "casey's",
+        "murphy usa", "pilot fuel", "love's travel", "76 gas",
+        "costco gas", "costco fuel",
         "auto repair", "jiffy lube", "oil change", "autozone", "o reilly",
-        "napa auto", "pep boys", "car wash", "dmv", "costco gas",
+        "napa auto", "pep boys", "car wash", "dmv",
         "tesla", "ev charging", "electrify america", "chargepoint",
         "safelite", "firestone", "midas", "mavis", "discount tire",
+    ],
+    "Tobacco & Smoking": [
+        "tobacco", "smoke shop", "cigarette", "cigar", "vape", "nicotine",
+        "smokeless", "chewing tobacco",
     ],
     "Utilities": [
         "electric", "gas bill", "water bill", "internet", "at&t", "verizon",
@@ -122,7 +131,7 @@ def categorize(description: str, wasted_kws=None, cat_rules=None) -> tuple[str, 
         if kw in desc_lower:
             return (rule['category'], is_wasted)
 
-    return ('Wasted' if is_wasted else 'Uncategorized', is_wasted)
+    return ('Uncategorized', is_wasted)
 
 
 def extract_merchant_keyword(description: str) -> str:

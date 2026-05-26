@@ -89,8 +89,27 @@ def init_db():
     c.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_cat_rules_keyword ON category_rules(keyword)")
 
     # Restore real category for legacy rows where old categorizer wrote 'Wasted' as the category.
-    # Reset to Uncategorized so recategorize_all() can apply the correct category.
     c.execute("UPDATE transactions SET category='Uncategorized' WHERE category='Wasted'")
+
+    # Patch uncategorized gas-station and tobacco transactions that now have rules.
+    for _brand in ('shell', 'chevron', 'sunoco', 'exxon', 'mobil', 'arco',
+                   'bp ', 'citgo', 'valero', 'marathon', 'speedway', 'circle k',
+                   'wawa', 'sheetz', 'kwik trip', 'quiktrip', 'racetrac',
+                   "casey's", 'murphy usa', 'pilot fuel', "love's", '76 gas',
+                   'costco gas', 'costco fuel', 'electrify', 'chargepoint',
+                   'safelite', 'firestone', 'autozone', 'jiffy lube',
+                   'car wash', 'oil change'):
+        c.execute(
+            "UPDATE transactions SET category='Gas & Auto' "
+            "WHERE category IN ('Uncategorized','Wasted') AND lower(description) LIKE ?",
+            (f'%{_brand}%',)
+        )
+    for _kw in ('tobacco', 'smoke shop', 'cigarette', 'cigar', 'vape', 'nicotine', 'smokeless'):
+        c.execute(
+            "UPDATE transactions SET category='Tobacco & Smoking' "
+            "WHERE category IN ('Uncategorized','Wasted') AND lower(description) LIKE ?",
+            (f'%{_kw}%',)
+        )
 
     # Seed default INR rate if missing
     c.execute("INSERT OR IGNORE INTO settings (key, value) VALUES ('inr_usd_rate', '0.012')")
@@ -235,13 +254,29 @@ def init_db():
         ('salon', 'Personal Care'), ('barber', 'Personal Care'),
         ('haircut', 'Personal Care'), ('spa', 'Personal Care'),
         ('nail', 'Personal Care'),
-        # Gas & Auto
+        # Gas & Auto — brands (same brands as wasted_keywords so they get real category)
+        ('shell', 'Gas & Auto'), ('chevron', 'Gas & Auto'),
+        ('sunoco', 'Gas & Auto'), ('exxon', 'Gas & Auto'),
+        ('mobil', 'Gas & Auto'), ('arco', 'Gas & Auto'),
+        ('bp ', 'Gas & Auto'), ('citgo', 'Gas & Auto'),
+        ('valero', 'Gas & Auto'), ('marathon', 'Gas & Auto'),
+        ('speedway', 'Gas & Auto'), ('circle k', 'Gas & Auto'),
+        ('wawa', 'Gas & Auto'), ('sheetz', 'Gas & Auto'),
+        ('kwik trip', 'Gas & Auto'), ('quiktrip', 'Gas & Auto'),
+        ('racetrac', 'Gas & Auto'), ('casey\'s', 'Gas & Auto'),
+        ('murphy usa', 'Gas & Auto'), ('pilot fuel', 'Gas & Auto'),
+        ('love\'s travel', 'Gas & Auto'), ('76 gas', 'Gas & Auto'),
         ('costco gas', 'Gas & Auto'), ('costco whse', 'Groceries'),
         ('costco fuel', 'Gas & Auto'), ('tesla', 'Gas & Auto'),
         ('chargepoint', 'Gas & Auto'), ('electrify', 'Gas & Auto'),
         ('safelite', 'Gas & Auto'), ('firestone', 'Gas & Auto'),
         ('autozone', 'Gas & Auto'), ('jiffy lube', 'Gas & Auto'),
         ('car wash', 'Gas & Auto'), ('oil change', 'Gas & Auto'),
+        # Tobacco & Smoking
+        ('tobacco', 'Tobacco & Smoking'), ('smoke shop', 'Tobacco & Smoking'),
+        ('cigarette', 'Tobacco & Smoking'), ('cigar', 'Tobacco & Smoking'),
+        ('vape', 'Tobacco & Smoking'), ('nicotine', 'Tobacco & Smoking'),
+        ('smokeless', 'Tobacco & Smoking'), ('chewing tobacco', 'Tobacco & Smoking'),
         # Travel / Insurance (unique entries only — geico/state farm/allstate etc. already above)
         ('travelers', 'Insurance'), ('travelers per ins', 'Insurance'),
         ('travelers ins', 'Insurance'),
