@@ -92,28 +92,37 @@ WEB_CATEGORIES = {
 }
 
 
-def categorize(description: str) -> tuple[str, bool]:
-    """Return (category, is_wasted) for a transaction description."""
+def categorize(description: str, wasted_kws=None, cat_rules=None) -> tuple[str, bool]:
+    """Return (category, is_wasted) for a transaction description.
+
+    Pass pre-fetched wasted_kws / cat_rules lists to avoid per-row DB calls
+    during bulk imports.
+    """
     desc_lower = description.lower()
 
-    # Check wasted keywords first
-    wasted_kws = db.get_wasted_keywords()
+    if wasted_kws is None:
+        wasted_kws = db.get_wasted_keywords()
+    if cat_rules is None:
+        cat_rules = db.get_category_rules()
+
+    is_wasted = False
     for wkw in wasted_kws:
         kw = wkw['keyword'].lower()
         if kw in desc_lower:
             exclude = wkw.get('exclude_if_contains') or ''
             if exclude and exclude.lower() in desc_lower:
-                continue  # Exception (e.g. Costco Gas is NOT wasted)
-            return ('Wasted', True)
+                continue
+            is_wasted = True
+            break
 
-    # Check category rules from DB
-    rules = db.get_category_rules()
-    for rule in rules:
+    # Return the matching category regardless of wasted status so the
+    # category breakdown stays meaningful (e.g. Shell stays in Gas & Auto)
+    for rule in cat_rules:
         kw = rule['keyword'].lower()
         if kw in desc_lower:
-            return (rule['category'], False)
+            return (rule['category'], is_wasted)
 
-    return ('Uncategorized', False)
+    return ('Wasted' if is_wasted else 'Uncategorized', is_wasted)
 
 
 def extract_merchant_keyword(description: str) -> str:
@@ -156,11 +165,13 @@ def extract_merchant_keyword(description: str) -> str:
 
 
 def recategorize_all():
-    """Re-run categorization on all transactions that are Uncategorized."""
+    """Re-run categorization on Uncategorized and legacy Wasted transactions."""
     txns = db.get_transactions()
+    wasted_kws = db.get_wasted_keywords()
+    cat_rules  = db.get_category_rules()
     for txn in txns:
-        if txn['category'] in ('Uncategorized', None):
-            cat, is_wasted = categorize(txn['description'])
+        if txn['category'] in ('Uncategorized', 'Wasted', None):
+            cat, is_wasted = categorize(txn['description'], wasted_kws, cat_rules)
             db.update_transaction_category(txn['id'], cat, is_wasted)
 
 
@@ -459,6 +470,8 @@ def _pdf_text_to_transactions(filepath: str, account_id: int, statement_file: st
 
     transactions = []
     inserted = skipped = 0
+    wasted_kws = db.get_wasted_keywords()
+    cat_rules  = db.get_category_rules()
 
     for line in text_lines:
         line = line.strip()
@@ -508,7 +521,7 @@ def _pdf_text_to_transactions(filepath: str, account_id: int, statement_file: st
                 category  = _classify_credit(description)
                 is_wasted = False
             else:
-                category, is_wasted = categorize(description)
+                category, is_wasted = categorize(description, wasted_kws, cat_rules)
 
             transactions.append({
                 'account_id':    account_id,
@@ -620,7 +633,7 @@ def _pdf_text_to_transactions(filepath: str, account_id: int, statement_file: st
             category  = _classify_credit(description)
             is_wasted = False
         else:
-            category, is_wasted = categorize(description)
+            category, is_wasted = categorize(description, wasted_kws, cat_rules)
 
         transactions.append({
             'account_id':    account_id,
@@ -664,6 +677,8 @@ def _df_to_transactions(df, account_id: int, statement_file: str,
 
     transactions = []
     skipped = inserted = 0
+    wasted_kws = db.get_wasted_keywords()
+    cat_rules  = db.get_category_rules()
 
     # Detect if date column uses DD/MM/YYYY (ICICI new format) vs MM/DD/YYYY.
     # If any day > 12 appears in first position, it's unambiguously DD/MM/YYYY.
@@ -756,7 +771,7 @@ def _df_to_transactions(df, account_id: int, statement_file: str,
                 category  = _classify_credit(description)
                 is_wasted = False
             else:
-                category, is_wasted = categorize(description)
+                category, is_wasted = categorize(description, wasted_kws, cat_rules)
 
             transactions.append({
                 'account_id':   account_id,

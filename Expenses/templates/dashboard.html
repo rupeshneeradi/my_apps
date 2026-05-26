@@ -102,12 +102,29 @@
 
 <div class="row g-3 mb-3">
 
+  {# ── MoM delta macro ────────────────────────────────────────── #}
+  {# lower is better for charges/wasted, higher is better for payments #}
+  {% macro delta_badge(current, prev, lower_is_better=true) %}
+    {% if prev and prev > 0 %}
+      {% set pct = ((current - prev) / prev * 100) %}
+      {% if pct > 0 %}
+        {% set color = 'text-danger' if lower_is_better else 'text-success' %}
+        <span class="small {{ color }}"><i class="bi bi-arrow-up-short"></i>{{ "%.1f"|format(pct) }}% vs prior</span>
+      {% elif pct < 0 %}
+        {% set color = 'text-success' if lower_is_better else 'text-danger' %}
+        <span class="small {{ color }}"><i class="bi bi-arrow-down-short"></i>{{ "%.1f"|format(pct|abs) }}% vs prior</span>
+      {% else %}
+        <span class="small text-muted">No change vs prior</span>
+      {% endif %}
+    {% endif %}
+  {% endmacro %}
+
   <div class="col-6 col-md-4">
     <a href="{{ url_for('transactions', month=month, year=year, txn_type='debit') }}" class="text-decoration-none">
       <div class="stat-card h-100" style="border-left:4px solid #ef4444;cursor:pointer">
         <div class="stat-label"><i class="bi bi-credit-card me-1"></i>Charges</div>
         <div class="stat-value">${{ "%.2f"|format(charges) }}</div>
-        <div class="stat-sub text-primary small">View all →</div>
+        <div class="stat-sub">{{ delta_badge(charges, prev_totals.debits, lower_is_better=true) }}</div>
       </div>
     </a>
   </div>
@@ -117,7 +134,7 @@
       <div class="stat-card h-100" style="border-left:4px solid #22c55e;cursor:pointer">
         <div class="stat-label"><i class="bi bi-arrow-return-left me-1"></i>Payments</div>
         <div class="stat-value text-success">${{ "%.2f"|format(payments) }}</div>
-        <div class="stat-sub text-primary small">View all →</div>
+        <div class="stat-sub">{{ delta_badge(payments, prev_totals.payments, lower_is_better=false) }}</div>
       </div>
     </a>
   </div>
@@ -138,7 +155,8 @@
         <div class="stat-label"><i class="bi bi-exclamation-triangle me-1"></i>Wasted</div>
         <div class="stat-value">${{ "%.2f"|format(wasted) }}</div>
         <div class="stat-sub">
-          {% if charges > 0 %}{{ "%.1f"|format(wasted/charges*100) }}% of charges{% endif %}
+          {% if charges > 0 %}{{ "%.1f"|format(wasted/charges*100) }}% of charges &nbsp;{% endif %}
+          {{ delta_badge(wasted, prev_totals.wasted, lower_is_better=true) }}
         </div>
       </div>
     </a>

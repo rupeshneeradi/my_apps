@@ -61,9 +61,19 @@ def dashboard():
     period_totals      = db.get_period_totals(month, year)
     inr_prompt         = db.get_inr_prompt_month()   # (year, month, label, cur_rate) or None
 
+    # Previous period for MoM delta
+    if month and month != 0:
+        prev_month = month - 1 if month > 1 else 12
+        prev_year  = year if month > 1 else year - 1
+    else:
+        prev_month = 0
+        prev_year  = year - 1
+    prev_totals = db.get_period_totals(prev_month, prev_year)
+
     return render_template('dashboard.html',
         account_breakdown=account_breakdown,
         period_totals=period_totals,
+        prev_totals=prev_totals,
         category_breakdown=category_breakdown,
         recent_txns=recent_txns,
         available_months=available_months,
@@ -155,6 +165,7 @@ def transactions():
     category   = request.args.get('category', '')
     txn_type   = request.args.get('txn_type', '')   # 'debit' | 'credit' | ''
     is_wasted  = request.args.get('is_wasted', None)
+    search     = request.args.get('q', '').strip()
     page       = request.args.get('page', 1, type=int)
     per_page   = 50
 
@@ -171,6 +182,7 @@ def transactions():
         category=category or None,
         txn_type=txn_type or None,
         is_wasted=is_wasted,
+        search=search or None,
         limit=per_page, offset=(page - 1) * per_page
     )
     total_count = db.count_transactions(
@@ -179,6 +191,7 @@ def transactions():
         category=category or None,
         txn_type=txn_type or None,
         is_wasted=is_wasted,
+        search=search or None,
     )
     accounts = db.get_accounts()
     categories = db.get_distinct_categories()
@@ -196,6 +209,7 @@ def transactions():
         selected_account=account_id, selected_category=category,
         selected_txn_type=txn_type,
         selected_wasted=is_wasted,
+        search=search,
         page=page, total_pages=total_pages, total_count=total_count,
     )
 
@@ -408,11 +422,11 @@ def settings():
             key = request.form.get('key', '')
             parts = key.replace('inr_usd_rate_', '').split('_')
             if len(parts) == 2:
-                db.set_setting(key, '')   # blank = "deleted"
-                conn_tmp = __import__('sqlite3').connect(db.DB_PATH)
-                conn_tmp.execute("DELETE FROM settings WHERE key=?", (key,))
-                conn_tmp.commit(); conn_tmp.close()
-                flash('Monthly rate deleted.', 'info')
+                try:
+                    db.delete_monthly_inr_rate(int(parts[0]), int(parts[1]))
+                    flash('Monthly rate deleted.', 'info')
+                except (ValueError, IndexError):
+                    flash('Invalid rate key.', 'danger')
         return redirect(url_for('settings'))
 
     monthly_rates = db.get_all_monthly_inr_rates()
