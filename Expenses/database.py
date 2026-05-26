@@ -88,6 +88,10 @@ def init_db():
               "(SELECT MAX(id) FROM category_rules GROUP BY keyword)")
     c.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_cat_rules_keyword ON category_rules(keyword)")
 
+    # Restore real category for legacy rows where old categorizer wrote 'Wasted' as the category.
+    # Reset to Uncategorized so recategorize_all() can apply the correct category.
+    c.execute("UPDATE transactions SET category='Uncategorized' WHERE category='Wasted'")
+
     # Seed default INR rate if missing
     c.execute("INSERT OR IGNORE INTO settings (key, value) VALUES ('inr_usd_rate', '0.012')")
 

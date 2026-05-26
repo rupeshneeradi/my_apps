@@ -137,12 +137,10 @@
             {{ t.description[:55] }}{% if t.description|length > 55 %}…{% endif %}
           </td>
           <td>
-            <!-- Inline category editor -->
-            <div class="d-flex align-items-center gap-1">
+            <div class="d-flex align-items-center gap-1 flex-wrap">
+              <span class="badge-cat" id="cat-label-{{ t.id }}">{{ t.category }}</span>
               {% if t.is_wasted %}
-                <span class="badge bg-danger">Wasted</span>
-              {% else %}
-                <span class="badge-cat" id="cat-label-{{ t.id }}">{{ t.category }}</span>
+                <span class="badge-wasted" id="wasted-badge-{{ t.id }}">Wasted</span>
               {% endif %}
               <button class="btn btn-xs btn-outline-secondary edit-cat-btn"
                       data-id="{{ t.id }}"
@@ -212,6 +210,7 @@
             <input class="form-check-input" type="checkbox" id="modalWastedCheck">
             <label class="form-check-label" for="modalWastedCheck">
               <span class="text-danger fw-semibold">Mark as Wasted</span>
+              <small class="text-muted d-block">Flags as unnecessary spend — original category is kept</small>
             </label>
           </div>
         </div>
@@ -380,20 +379,30 @@ function showModalAlert(msg, type) {
   setTimeout(() => el.remove(), 4000);
 }
 
-// ── Helper: update a single row's badge without page reload ──
+// ── Helper: update a single row's badges without page reload ──
 function updateRow(id, category, isWasted) {
   const row   = document.getElementById(`row-${id}`);
   const label = document.getElementById(`cat-label-${id}`);
   if (!row) return;
+
+  row.classList.toggle('wasted-row', !!isWasted);
+  if (label) label.textContent = category || 'Uncategorized';
+
+  let badge = document.getElementById(`wasted-badge-${id}`);
   if (isWasted) {
-    row.classList.add('wasted-row');
-    if (label) label.outerHTML = `<span class="badge bg-danger" id="cat-label-${id}">Wasted</span>`;
-  } else {
-    row.classList.remove('wasted-row');
-    const el = document.getElementById(`cat-label-${id}`);
-    if (el) el.textContent = category;
-    else if (label) label.textContent = category;
+    if (!badge && label) {
+      badge = document.createElement('span');
+      badge.className = 'badge-wasted';
+      badge.id = `wasted-badge-${id}`;
+      badge.textContent = 'Wasted';
+      label.insertAdjacentElement('afterend', badge);
+    }
+  } else if (badge) {
+    badge.remove();
   }
+
+  const btn = row.querySelector('.edit-cat-btn');
+  if (btn) { btn.dataset.cat = category; btn.dataset.wasted = isWasted ? '1' : '0'; }
 }
 </script>
 {% endblock %}
