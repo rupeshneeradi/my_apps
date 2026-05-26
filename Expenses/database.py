@@ -72,6 +72,22 @@ def init_db():
     if 'orig_currency' not in existing:
         c.execute("ALTER TABLE transactions ADD COLUMN orig_currency TEXT")
 
+    # Performance indexes
+    for _sql in [
+        "CREATE INDEX IF NOT EXISTS idx_txn_date     ON transactions(date)",
+        "CREATE INDEX IF NOT EXISTS idx_txn_account  ON transactions(account_id)",
+        "CREATE INDEX IF NOT EXISTS idx_txn_category ON transactions(category)",
+        "CREATE INDEX IF NOT EXISTS idx_txn_type     ON transactions(txn_type)",
+        "CREATE INDEX IF NOT EXISTS idx_txn_wasted   ON transactions(is_wasted)",
+        "CREATE INDEX IF NOT EXISTS idx_txn_orig_cur ON transactions(orig_currency)",
+    ]:
+        c.execute(_sql)
+
+    # Deduplicate category_rules (keep highest id per keyword), then enforce uniqueness
+    c.execute("DELETE FROM category_rules WHERE id NOT IN "
+              "(SELECT MAX(id) FROM category_rules GROUP BY keyword)")
+    c.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_cat_rules_keyword ON category_rules(keyword)")
+
     # Seed default INR rate if missing
     c.execute("INSERT OR IGNORE INTO settings (key, value) VALUES ('inr_usd_rate', '0.012')")
 
@@ -145,8 +161,7 @@ def init_db():
         ('food lion', 'Groceries'), ('sprouts', 'Groceries'),
         # Shopping
         ('amazon', 'Shopping'), ('ebay', 'Shopping'),
-        ('best buy', 'Shopping'), ('home depot', 'Shopping'),
-        ('lowe\'s', 'Shopping'), ('ikea', 'Shopping'),
+        ('best buy', 'Shopping'), ('ikea', 'Shopping'),
         ('tj maxx', 'Shopping'), ('marshalls', 'Shopping'),
         ('ross', 'Shopping'), ('macy\'s', 'Shopping'),
         ('nordstrom', 'Shopping'), ('gap', 'Shopping'),
@@ -178,7 +193,7 @@ def init_db():
         ('netflix', 'Entertainment'), ('spotify', 'Entertainment'),
         ('hulu', 'Entertainment'), ('disney+', 'Entertainment'),
         ('apple tv', 'Entertainment'), ('hbo', 'Entertainment'),
-        ('amazon prime', 'Entertainment'), ('youtube', 'Entertainment'),
+        ('amazon prime video', 'Entertainment'), ('youtube', 'Entertainment'),
         ('cinema', 'Entertainment'), ('theater', 'Entertainment'),
         ('amc ', 'Entertainment'), ('regal', 'Entertainment'),
         ('ticketmaster', 'Entertainment'), ('stub hub', 'Entertainment'),
@@ -223,15 +238,12 @@ def init_db():
         ('safelite', 'Gas & Auto'), ('firestone', 'Gas & Auto'),
         ('autozone', 'Gas & Auto'), ('jiffy lube', 'Gas & Auto'),
         ('car wash', 'Gas & Auto'), ('oil change', 'Gas & Auto'),
-        # Travel / Insurance
+        # Travel / Insurance (unique entries only — geico/state farm/allstate etc. already above)
         ('travelers', 'Insurance'), ('travelers per ins', 'Insurance'),
-        ('geico', 'Insurance'), ('state farm', 'Insurance'),
-        ('allstate', 'Insurance'), ('progressive', 'Insurance'),
-        ('aaa', 'Insurance'), ('travelers ins', 'Insurance'),
-        # Finance / Banking
-        ('late fee', 'Finance'), ('cash rewards', 'Finance'),
-        ('statement credit', 'Finance'), ('payment from chk', 'Finance'),
-        ('wire transfer', 'Finance'), ('ach payment', 'Finance'),
+        ('travelers ins', 'Insurance'),
+        # Finance / Banking (unique entries only — late fee/wire transfer already above)
+        ('cash rewards', 'Finance'), ('statement credit', 'Finance'),
+        ('payment from chk', 'Finance'), ('ach payment', 'Finance'),
         # Amazon
         ('amazon mark', 'Shopping'), ('amazon mktpl', 'Shopping'),
         ('amzn.com', 'Shopping'), ('amazon.com', 'Shopping'),
@@ -412,7 +424,7 @@ def _apply_period(sql, params, month, year):
 
 
 def get_transactions(month=None, year=None, account_id=None, category=None,
-                     txn_type=None, is_wasted=None, limit=None, offset=0):
+                     txn_type=None, is_wasted=None, search=None, limit=None, offset=0):
     conn = get_conn()
     sql = """
         SELECT t.*, a.name as account_name, a.type as account_type
@@ -434,6 +446,9 @@ def get_transactions(month=None, year=None, account_id=None, category=None,
     if is_wasted is not None:
         sql += " AND t.is_wasted = ?"
         params.append(int(is_wasted))
+    if search:
+        sql += " AND t.description LIKE ?"
+        params.append(f'%{search}%')
     sql += " ORDER BY t.date DESC"
     if limit:
         sql += f" LIMIT {int(limit)} OFFSET {int(offset)}"
@@ -443,7 +458,7 @@ def get_transactions(month=None, year=None, account_id=None, category=None,
 
 
 def count_transactions(month=None, year=None, account_id=None, category=None,
-                       txn_type=None, is_wasted=None):
+                       txn_type=None, is_wasted=None, search=None):
     conn = get_conn()
     sql = "SELECT COUNT(*) FROM transactions t WHERE 1=1"
     params = []
@@ -460,6 +475,9 @@ def count_transactions(month=None, year=None, account_id=None, category=None,
     if is_wasted is not None:
         sql += " AND t.is_wasted = ?"
         params.append(int(is_wasted))
+    if search:
+        sql += " AND t.description LIKE ?"
+        params.append(f'%{search}%')
     count = conn.execute(sql, params).fetchone()[0]
     conn.close()
     return count
