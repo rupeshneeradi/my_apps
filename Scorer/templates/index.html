@@ -40,7 +40,8 @@ header{background:var(--surf);border-bottom:1px solid var(--bdr);padding:0 20px;
 /* ── TAB PANELS ─────────────────────────────────────────────────────────────── */
 .tab-panel{display:none}
 #tab-scorer.active{display:grid;grid-template-columns:390px 1fr;height:calc(100vh - 47px)}
-#tab-tracker.active,#tab-gap.active,#tab-builder.active{display:block}
+#tab-tracker.active,#tab-gap.active,#tab-builder.active,#tab-insights.active{display:block}
+#tab-pipeline.active{display:flex;flex-direction:column;height:calc(100vh - 47px);overflow:hidden}
 
 /* ── SHARED FORM ─────────────────────────────────────────────────────────────── */
 label{font-size:10px;font-weight:700;color:var(--muted);display:block;margin-bottom:4px;text-transform:uppercase;letter-spacing:.6px}
@@ -257,6 +258,71 @@ details[open] .arr{transform:rotate(180deg)}
 .res-item{font-size:12px;color:var(--text);padding:3px 0;display:flex;gap:7px;align-items:flex-start}
 .res-item::before{content:"📚";flex-shrink:0}
 
+/* ── PIPELINE TAB ────────────────────────────────────────────────────────────── */
+.pipeline-wrap{display:flex;flex-direction:column;height:100%;overflow:hidden}
+.pipeline-header{background:var(--surf);border-bottom:1px solid var(--bdr);padding:10px 20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;flex-shrink:0}
+.pipeline-toolbar{display:flex;align-items:center;gap:8px;flex:1;flex-wrap:wrap}
+.pipe-filter-pills{display:flex;gap:4px}
+.ppill{font-size:11px;font-weight:700;padding:4px 12px;border-radius:20px;border:1px solid var(--bdr);background:transparent;color:var(--muted);cursor:pointer;transition:all .15s}
+.ppill:hover{border-color:var(--acc);color:var(--text)}
+.ppill.active{background:var(--acc);color:#fff;border-color:var(--acc)}
+.sync-btn{padding:6px 14px;background:var(--acc);color:#fff;border:none;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;transition:opacity .15s;white-space:nowrap}
+.sync-btn:hover{opacity:.85}.sync-btn:disabled{opacity:.5;cursor:not-allowed}
+.pipeline-stats-bar{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;padding:10px 20px;background:var(--surf);border-bottom:1px solid var(--bdr);flex-shrink:0}
+.pstat{background:var(--card);border:1px solid var(--bdr);border-radius:8px;padding:8px 10px;text-align:center}
+.pstat-val{font-size:18px;font-weight:800;line-height:1}
+.pstat-lbl{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-top:3px}
+.pipeline-table-wrap{flex:1;overflow-y:auto;padding:0}
+.pipeline-table{width:100%;border-collapse:collapse}
+.pipeline-table th{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;padding:8px 12px;border-bottom:1px solid var(--bdr);background:var(--surf);position:sticky;top:0;text-align:left;white-space:nowrap}
+.pipeline-table td{padding:8px 12px;border-bottom:1px solid var(--bdr);font-size:12px;vertical-align:middle}
+.pipeline-table tr:hover td{background:rgba(100,112,243,.04)}
+.pipe-badge{font-size:10px;font-weight:800;padding:2px 8px;border-radius:10px;white-space:nowrap}
+.pipe-opt{background:rgba(167,139,250,.15);color:var(--purple)}
+.pipe-portal{background:rgba(59,130,246,.15);color:var(--good)}
+.status-pipe-sel{background:transparent;border:none;font-size:10px;font-weight:700;padding:2px 6px;border-radius:10px;cursor:pointer;outline:none}
+.sp-new{background:rgba(59,130,246,.12);color:var(--good)}
+.sp-saved{background:rgba(245,158,11,.12);color:var(--ok)}
+.sp-applied{background:rgba(34,197,94,.12);color:var(--hot)}
+.sp-skip{background:rgba(107,114,128,.1);color:var(--muted)}
+.opt-score{font-size:11px;font-weight:700;padding:1px 6px;border-radius:8px;background:rgba(167,139,250,.1);color:var(--purple)}
+/* expandable row */
+.pipe-detail-row td{padding:0 !important}
+.pipe-detail-inner{background:var(--card2);border-top:none;padding:12px 16px;display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.pipe-jd-box{background:var(--card);border:1px solid var(--bdr);border-radius:7px;padding:10px;max-height:220px;overflow-y:auto;font-size:11px;color:var(--muted);white-space:pre-wrap;font-family:inherit;line-height:1.5}
+.pipe-kws{background:var(--card);border:1px solid var(--bdr);border-radius:7px;padding:10px}
+.pipe-kw-head{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
+.pipe-actions{display:flex;gap:5px;align-items:center}
+.pact-btn{background:none;border:1px solid var(--bdr);color:var(--muted);border-radius:5px;padding:2px 8px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;transition:all .15s}
+.pact-btn:hover{border-color:var(--acc);color:#7c8dff}
+.pipeline-empty{padding:80px 20px;text-align:center;color:var(--muted)}
+.pipe-expand-btn{background:none;border:none;color:var(--muted);cursor:pointer;font-size:12px;padding:2px 6px;border-radius:4px}
+.pipe-expand-btn:hover{background:rgba(100,112,243,.1);color:#7c8dff}
+
+/* ── INSIGHTS TAB ────────────────────────────────────────────────────────────── */
+.insights-wrap{padding:18px 24px;max-width:1300px;margin:0 auto;min-height:calc(100vh - 47px)}
+.ins-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+.ins-card{background:var(--card);border:1px solid var(--bdr);border-radius:var(--r);overflow:hidden}
+.ins-card-head{background:var(--surf);border-bottom:1px solid var(--bdr);padding:10px 14px;font-size:11px;font-weight:800;color:var(--text);text-transform:uppercase;letter-spacing:.6px;display:flex;align-items:center;justify-content:space-between}
+.ins-table{width:100%;border-collapse:collapse}
+.ins-table th{font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;padding:7px 12px;border-bottom:1px solid var(--bdr);text-align:left;white-space:nowrap}
+.ins-table td{padding:7px 12px;border-bottom:1px solid var(--bdr);font-size:12px;vertical-align:middle}
+.ins-table tr:last-child td{border-bottom:none}
+.ins-table tr:hover td{background:rgba(100,112,243,.04)}
+.score-bar-wrap{display:flex;align-items:center;gap:7px}
+.score-bar-bg{flex:1;height:6px;background:var(--card2);border-radius:4px;overflow:hidden;min-width:50px}
+.score-bar-fill{height:100%;border-radius:4px}
+.kw-freq-bar{display:flex;align-items:center;gap:6px}
+.kw-freq-bg{flex:1;height:5px;background:var(--card2);border-radius:3px;overflow:hidden;min-width:40px}
+.kw-freq-fill{height:100%;border-radius:3px;background:var(--skip)}
+.verdict-chip{font-size:10px;font-weight:700;padding:1px 7px;border-radius:8px}
+.vc-strong{background:rgba(34,197,94,.12);color:var(--hot)}
+.vc-good{background:rgba(59,130,246,.12);color:var(--good)}
+.vc-possible{background:rgba(245,158,11,.12);color:var(--ok)}
+.vc-weak{background:rgba(239,68,68,.12);color:var(--skip)}
+.insights-full{grid-column:1/-1}
+.insights-empty{padding:40px;text-align:center;color:var(--muted);font-size:13px}
+
 /* ── RESUME BUILDER TAB ──────────────────────────────────────────────────────── */
 .builder-wrap{max-width:860px;margin:0 auto;padding:20px 24px;padding-bottom:40px}
 .builder-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px}
@@ -298,7 +364,9 @@ details[open] .arr{transform:rotate(180deg)}
     <button class="tab-btn active" data-tab="scorer"  onclick="showTab('scorer')"> 📊 ATS Scorer</button>
     <button class="tab-btn"        data-tab="tracker" onclick="showTab('tracker')">📋 Job Tracker</button>
     <button class="tab-btn"        data-tab="gap"     onclick="showTab('gap')">    📈 Gap Analyzer</button>
-    <button class="tab-btn"        data-tab="builder" onclick="showTab('builder')">✏️ Resume Builder</button>
+    <button class="tab-btn"        data-tab="builder"  onclick="showTab('builder')">✏️ Resume Builder</button>
+    <button class="tab-btn"        data-tab="pipeline" onclick="showTab('pipeline')">🔍 Job Pipeline</button>
+    <button class="tab-btn"        data-tab="insights" onclick="showTab('insights')">💡 Insights</button>
   </nav>
   <div class="hdr-r">
     Resumes: <span id="rc">loading…</span>
@@ -386,6 +454,11 @@ details[open] .arr{transform:rotate(180deg)}
           <div><label>Salary Range</label><input id="af-salary" placeholder="$120K–$150K"></div>
           <div><label>Source</label><input id="af-source" placeholder="LinkedIn / Referral / …"></div>
           <div><label>ATS Score</label><input type="number" id="af-ats" placeholder="75" min="0" max="100"></div>
+          <div><label>Resume Version Used</label>
+            <select id="af-resume-ver">
+              <option value="">— not specified —</option>
+            </select>
+          </div>
         </div>
         <div>
           <label>Notes</label>
@@ -561,6 +634,150 @@ details[open] .arr{transform:rotate(180deg)}
 </div>
 
 <!-- ═══════════════════════════════════════════════════════════════════════════
+     TAB 5 — JOB PIPELINE
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<div id="tab-pipeline" class="tab-panel">
+  <div class="pipeline-wrap">
+
+    <!-- Stats bar -->
+    <div class="pipeline-stats-bar" id="pipe-stats-bar">
+      <div class="pstat"><div class="pstat-val v-blue"  id="ps-total">—</div><div class="pstat-lbl">Total Scored</div></div>
+      <div class="pstat"><div class="pstat-val v-purple" id="ps-opt">—</div><div class="pstat-lbl">OPT Jobs</div></div>
+      <div class="pstat"><div class="pstat-val v-good"  id="ps-portal">—</div><div class="pstat-lbl">Portal Jobs</div></div>
+      <div class="pstat"><div class="pstat-val v-teal"  id="ps-new">—</div><div class="pstat-lbl">New</div></div>
+      <div class="pstat"><div class="pstat-val v-gold"  id="ps-saved">—</div><div class="pstat-lbl">Saved</div></div>
+      <div class="pstat"><div class="pstat-val v-green" id="ps-avgats">—</div><div class="pstat-lbl">Avg ATS %</div></div>
+    </div>
+
+    <!-- Toolbar -->
+    <div class="pipeline-header">
+      <div class="pipe-filter-pills">
+        <button class="ppill active" data-pipe="all"    onclick="setPipeFilter(this,'all')">All</button>
+        <button class="ppill"        data-pipe="opt"    onclick="setPipeFilter(this,'opt')">🟣 OPT</button>
+        <button class="ppill"        data-pipe="portal" onclick="setPipeFilter(this,'portal')">🔵 Portal</button>
+      </div>
+      <div style="display:flex;gap:6px;align-items:center;flex:1;flex-wrap:wrap">
+        <label style="font-size:11px;color:var(--muted);text-transform:none;margin:0">Min ATS:</label>
+        <input type="number" id="pipe-min-ats" value="40" min="0" max="100"
+               style="width:60px;padding:4px 7px;font-size:12px" onchange="loadPipeline()">
+        <label style="font-size:11px;color:var(--muted);text-transform:none;margin:0">Status:</label>
+        <select id="pipe-status-filter" style="width:100px;padding:4px 7px;font-size:12px" onchange="loadPipeline()">
+          <option value="">All</option>
+          <option value="new">New</option>
+          <option value="saved">Saved</option>
+          <option value="applied">Applied</option>
+          <option value="skip">Skip</option>
+        </select>
+      </div>
+      <button class="sync-btn" id="sync-btn" onclick="syncPipeline()">⟳ Sync Jobs</button>
+      <span id="pipe-sync-msg" style="font-size:11px;color:var(--muted)"></span>
+    </div>
+
+    <!-- Table -->
+    <div class="pipeline-table-wrap">
+      <table class="pipeline-table">
+        <thead>
+          <tr>
+            <th style="width:28px"></th>
+            <th>Title / Company</th>
+            <th>Pipeline</th>
+            <th title="Combined = role fit + keyword match">Combined ▼</th>
+            <th title="Keyword ATS match %">ATS %</th>
+            <th title="How well resume domain matches JD domain">Role Fit</th>
+            <th>Resume Domain → JD Domain</th>
+            <th>Posted</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="pipe-tbody"></tbody>
+      </table>
+      <div id="pipe-empty" class="pipeline-empty" style="display:none">
+        <div style="font-size:36px;opacity:.2;margin-bottom:10px">🔍</div>
+        <p>No scored jobs yet — click <strong>⟳ Sync Jobs</strong> to score jobs from your scrapers.</p>
+        <p style="font-size:12px;margin-top:8px;color:var(--dim)">Jobs with ATS ≥ 40% will appear here after sync.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     TAB 6 — INSIGHTS
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<div id="tab-insights" class="tab-panel">
+  <div class="insights-wrap">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px">
+      <div>
+        <div style="font-size:17px;font-weight:800">💡 Scoring Insights</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:2px">Every ATS scoring session logged · Keyword gap trends over time</div>
+      </div>
+      <button class="sync-btn" onclick="loadInsights()">↻ Refresh</button>
+    </div>
+
+    <div class="ins-grid">
+      <!-- Score History -->
+      <div class="ins-card insights-full">
+        <div class="ins-card-head">
+          📊 Score History
+          <span style="font-size:11px;font-weight:400;color:var(--muted);text-transform:none">Last 50 sessions</span>
+        </div>
+        <div style="overflow-x:auto;max-height:340px;overflow-y:auto">
+          <table class="ins-table" id="history-table">
+            <thead>
+              <tr>
+                <th>Resume</th>
+                <th>JD Title</th>
+                <th>ATS %</th>
+                <th>Recruiter</th>
+                <th>Quality</th>
+                <th>Interview</th>
+                <th>Verdict</th>
+                <th>Scored At</th>
+              </tr>
+            </thead>
+            <tbody id="history-tbody">
+              <tr><td colspan="8" class="insights-empty">Loading…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Top Keyword Gaps -->
+      <div class="ins-card">
+        <div class="ins-card-head">
+          🔴 Top Recurring Keyword Gaps
+          <span style="font-size:11px;font-weight:400;color:var(--muted);text-transform:none">Add these to your resume</span>
+        </div>
+        <div style="overflow-y:auto;max-height:380px">
+          <table class="ins-table" id="kw-gap-table">
+            <thead><tr><th>Keyword</th><th>Role Context</th><th>Times Gap</th><th>Times Seen</th><th>Frequency</th></tr></thead>
+            <tbody id="kw-gap-tbody">
+              <tr><td colspan="5" class="insights-empty">Loading…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Top Filled Keywords -->
+      <div class="ins-card">
+        <div class="ins-card-head">
+          🟢 Keywords You Cover Well
+          <span style="font-size:11px;font-weight:400;color:var(--muted);text-transform:none">Consistently matched</span>
+        </div>
+        <div style="overflow-y:auto;max-height:380px">
+          <table class="ins-table" id="kw-hit-table">
+            <thead><tr><th>Keyword</th><th>Role Context</th><th>Times Matched</th><th>Last Seen</th></tr></thead>
+            <tbody id="kw-hit-tbody">
+              <tr><td colspan="4" class="insights-empty">Loading…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
      JAVASCRIPT
      ═══════════════════════════════════════════════════════════════════════════ -->
 <script>
@@ -582,7 +799,9 @@ function toggleTheme(){
 function showTab(name){
   document.querySelectorAll(".tab-btn").forEach(b=>b.classList.toggle("active",b.dataset.tab===name));
   document.querySelectorAll(".tab-panel").forEach(p=>p.classList.toggle("active",p.id==="tab-"+name));
-  if(name==="tracker") loadTracker();
+  if(name==="tracker")  loadTracker();
+  if(name==="pipeline") loadPipeline();
+  if(name==="insights") loadInsights();
 }
 
 // ── Resume list ───────────────────────────────────────────────────────────────
@@ -595,6 +814,9 @@ async function init(){
     _resumeNames=d.names||[];
     const sel=document.getElementById("resume-select");
     _resumeNames.forEach(n=>{const o=document.createElement("option");o.value=n;o.textContent=n;sel.appendChild(o);});
+    // also populate tracker resume-version dropdown
+    const rv=document.getElementById("af-resume-ver");
+    _resumeNames.forEach(n=>{const o=document.createElement("option");o.value=n;o.textContent=n;rv.appendChild(o);});
   }catch{document.getElementById("rc").textContent="error";}
 }
 async function reloadResumes(){
@@ -862,6 +1084,7 @@ function showAddForm(){
 function hideAddForm(){
   document.getElementById("add-form").style.display="none";
   ["af-company","af-role","af-url","af-salary","af-source","af-notes"].forEach(id=>document.getElementById(id).value="");
+  document.getElementById("af-resume-ver").value="";
   document.getElementById("af-ats").value="";
   document.getElementById("af-status").value="applied";
   document.getElementById("af-date").value="";
@@ -875,9 +1098,10 @@ async function saveApplication(){
     date_applied: document.getElementById("af-date").value||new Date().toISOString().split("T")[0],
     status:  document.getElementById("af-status").value,
     ats_score: parseInt(document.getElementById("af-ats").value)||null,
-    salary_range: document.getElementById("af-salary").value.trim(),
-    source:  document.getElementById("af-source").value.trim(),
-    notes:   document.getElementById("af-notes").value.trim(),
+    salary_range:   document.getElementById("af-salary").value.trim(),
+    source:         document.getElementById("af-source").value.trim(),
+    notes:          document.getElementById("af-notes").value.trim(),
+    resume_version: document.getElementById("af-resume-ver").value.trim(),
   };
   if(!data.company&&!data.role){alert("Enter at least a company or role.");return;}
   try{
@@ -935,6 +1159,7 @@ function renderTracker(apps){
       <td style="font-size:12px;color:var(--muted)">${esc(a.source||"—")}</td>
       <td class="notes-cell" title="${esc(a.notes||"")}">${esc(a.notes||"—")}</td>
       <td class="tbl-actions">
+        <button class="act-btn" onclick="openGapFromTracker('${esc(a.role||"")}')" title="Analyze skill gap for this role">📈</button>
         <button class="act-btn act-del" onclick="deleteApp(${a.id},'${esc(a.company||"")}','${esc(a.role||"")}')" title="Delete">🗑</button>
       </td>
     </tr>`;
@@ -1187,6 +1412,317 @@ async function buildResume(){
     btn.textContent="✓ Downloaded!";
     setTimeout(()=>{btn.disabled=false;btn.textContent="⬇ Build & Download";},3000);
   }catch(e){alert("Error: "+e.message);btn.disabled=false;btn.textContent="⬇ Build & Download";}
+}
+
+// ── TRACKER → GAP BRIDGE ─────────────────────────────────────────────────────
+function openGapFromTracker(role){
+  if(!role)return;
+  showTab("gap");
+  document.getElementById("gap-role").value=role;
+  document.getElementById("gap-skills").focus();
+}
+
+// ── JOB PIPELINE ──────────────────────────────────────────────────────────────
+let _pipeFilter="all";
+let _pipeJobs=[];
+let _expandedRows=new Set();
+
+async function loadPipeline(){
+  const minAts=document.getElementById("pipe-min-ats").value||40;
+  const statusF=document.getElementById("pipe-status-filter").value||"";
+  let url="/api/pipeline/list?min_ats="+minAts;
+  if(_pipeFilter!=="all") url+="&pipeline="+_pipeFilter;
+  if(statusF) url+="&status="+statusF;
+  try{
+    const d=await fetch(url).then(r=>r.json());
+    _pipeJobs=d.jobs||[];
+    renderPipelineJobs(_pipeJobs);
+  }catch(e){console.error(e);}
+  try{
+    const s=await fetch("/api/pipeline/stats").then(r=>r.json());
+    document.getElementById("ps-total").textContent=s.total||0;
+    document.getElementById("ps-opt").textContent=s.opt||0;
+    document.getElementById("ps-portal").textContent=s.portal||0;
+    document.getElementById("ps-new").textContent=s.new||0;
+    document.getElementById("ps-saved").textContent=s.saved||0;
+    document.getElementById("ps-avgats").textContent=s.avg_ats?s.avg_ats+"%":"—";
+  }catch{}
+}
+
+function setPipeFilter(btn,pipe){
+  document.querySelectorAll(".ppill").forEach(b=>b.classList.remove("active"));
+  btn.classList.add("active");
+  _pipeFilter=pipe;
+  loadPipeline();
+}
+
+async function syncPipeline(){
+  const btn=document.getElementById("sync-btn");
+  const msg=document.getElementById("pipe-sync-msg");
+  btn.disabled=true;btn.textContent="⏳ Syncing…";
+  msg.textContent="Scoring jobs against your resumes…";
+  try{
+    const d=await fetch("/api/pipeline/sync",{method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({pipeline:"all",threshold:40})}).then(r=>r.json());
+    if(d.error){msg.textContent="⚠ "+d.error;}
+    else{
+      const r=d.results||{};
+      const parts=[];
+      if(r.opt){
+        if(r.opt.error) parts.push(`OPT error: ${r.opt.error}`);
+        else if(r.opt.no_jd===r.opt.read&&r.opt.read>0)
+          parts.push(`OPT: ${r.opt.read} jobs found but no JD text yet — run the scraper first`);
+        else parts.push(`OPT: ${r.opt.stored} matched (${r.opt.skipped} filtered — role/keyword mismatch)`);
+      }
+      if(r.portal){
+        if(r.portal.error) parts.push(`Portal: ${r.portal.error}`);
+        else parts.push(`Portal: +${r.portal.stored} stored`);
+      }
+      msg.textContent=(parts.length?"✓ ":"")+parts.join(" · ");
+      loadPipeline();
+    }
+  }catch(e){msg.textContent="⚠ "+e.message;}
+  finally{btn.disabled=false;btn.textContent="⟳ Sync Jobs";}
+  setTimeout(()=>{msg.textContent="";},8000);
+}
+
+async function updatePipeStatus(jobId,status){
+  await fetch("/api/pipeline/update/"+encodeURIComponent(jobId),{
+    method:"PATCH",headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({status})
+  });
+  loadPipeline();
+}
+
+function togglePipeRow(jobId){
+  const rowId="pdr-"+jobId.replace(/[^a-z0-9]/gi,"_");
+  const row=document.getElementById(rowId);
+  if(!row)return;
+  const btn=document.getElementById("pex-"+jobId.replace(/[^a-z0-9]/gi,"_"));
+  if(row.style.display==="none"||!row.style.display){
+    row.style.display="table-row";
+    if(btn)btn.textContent="▲";
+    _expandedRows.add(jobId);
+  }else{
+    row.style.display="none";
+    if(btn)btn.textContent="▶";
+    _expandedRows.delete(jobId);
+  }
+}
+
+// Domain label map (mirrors role_classifier.py)
+const DOMAIN_LABELS={
+  devops_cloud:"DevOps/Cloud", oracle_erp:"Oracle/ERP",
+  data_engineering:"Data Eng", software_dev:"Software Dev",
+  cybersecurity:"Security", database_admin:"DBA", unknown:"Unknown"
+};
+function domainLabel(d){return DOMAIN_LABELS[d]||d||"—";}
+function domainColor(d){
+  const m={devops_cloud:"var(--purple)",oracle_erp:"var(--ok)",
+            data_engineering:"var(--teal)",software_dev:"var(--good)",
+            cybersecurity:"var(--skip)",database_admin:"var(--gold)"};
+  return m[d]||"var(--muted)";
+}
+function fitColor(fit){
+  return fit>=65?"var(--hot)":fit>=40?"var(--ok)":"var(--skip)";
+}
+function fitLabel(fit){
+  return fit>=65?"Good fit":fit>=40?"Partial":fit>=25?"Low fit":"Mismatch";
+}
+
+function renderPipelineJobs(jobs){
+  const tbody=document.getElementById("pipe-tbody");
+  const empty=document.getElementById("pipe-empty");
+  if(!jobs.length){tbody.innerHTML="";empty.style.display="block";return;}
+  empty.style.display="none";
+  const STATUS_OPTS=["new","saved","applied","skip"];
+  const STATUS_LBL={"new":"New","saved":"Saved","applied":"Applied","skip":"Skip"};
+
+  tbody.innerHTML=jobs.map(j=>{
+    const safeId=j.id.replace(/[^a-z0-9]/gi,"_");
+    const pipe=j.pipeline==="opt"
+      ?`<span class="pipe-badge pipe-opt">OPT</span>`
+      :`<span class="pipe-badge pipe-portal">Portal</span>`;
+
+    // Scores
+    const comb = j.combined_score||0;
+    const ats  = j.ats_score||0;
+    const fit  = j.role_fit_score||0;
+    const combCls = comb>=65?"hot":comb>=45?"ok":"skip";
+    const atsCls  = ats>=75?"hot":ats>=50?"ok":"skip";
+
+    const selOpts=STATUS_OPTS.map(s=>
+      `<option value="${s}"${s===j.status?" selected":""}>${STATUS_LBL[s]||s}</option>`
+    ).join("");
+
+    // Domain display
+    const rDomain = j.resume_domain||"unknown";
+    const jDomain = j.jd_domain||"unknown";
+    const domainCell = rDomain!=="unknown"||jDomain!=="unknown"
+      ? `<span style="font-size:10px;font-weight:700;color:${domainColor(rDomain)}">${domainLabel(rDomain)}</span>`
+        +`<span style="font-size:10px;color:var(--dim)"> → </span>`
+        +`<span style="font-size:10px;font-weight:700;color:${domainColor(jDomain)}">${domainLabel(jDomain)}</span>`
+      : `<span style="color:var(--dim);font-size:10px">—</span>`;
+
+    // Expanded detail row
+    const matched=(j.matched_kws||[]).slice(0,8).map(k=>`<span class="tm" style="font-size:10px">${esc(k)}</span>`).join(" ");
+    const gaps=(j.gap_critical||[]).concat(j.gap_required||[]).slice(0,6).map(k=>`<span class="tg" style="font-size:10px">${esc(k)}</span>`).join(" ");
+
+    const detailRow=`<tr class="pipe-detail-row" id="pdr-${safeId}" style="display:none">
+      <td colspan="10">
+        <div class="pipe-detail-inner">
+          <div>
+            <div style="font-size:10px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px">
+              Job Description
+              ${j.url?`<a href="${esc(j.url)}" target="_blank" style="color:#7c8dff;font-weight:700;margin-left:10px;text-transform:none">🔗 View posting</a>`:""}
+            </div>
+            <div class="pipe-jd-box">${esc(j.jd_text||"No JD stored")}</div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <div class="pipe-kws" style="background:rgba(239,68,68,.04);border-color:rgba(239,68,68,.2)">
+              <div class="pipe-kw-head" style="color:var(--skip)">✕ Keyword Gaps (${(j.gap_critical||[]).length+(j.gap_required||[]).length})</div>
+              <div>${gaps||'<span style="color:var(--muted);font-size:11px">No critical gaps</span>'}</div>
+            </div>
+            <div class="pipe-kws" style="background:rgba(34,197,94,.04);border-color:rgba(34,197,94,.2)">
+              <div class="pipe-kw-head" style="color:var(--hot)">✓ Matched (${(j.matched_kws||[]).length})</div>
+              <div>${matched||'<span style="color:var(--muted);font-size:11px">None</span>'}</div>
+            </div>
+            <div class="pipe-kws" style="padding:8px 10px">
+              <div style="font-size:10px;font-weight:800;color:var(--muted);text-transform:uppercase;margin-bottom:4px">Role Alignment</div>
+              <div style="font-size:12px">
+                Resume: <strong style="color:${domainColor(rDomain)}">${domainLabel(rDomain)}</strong>
+                &nbsp;→&nbsp;
+                JD: <strong style="color:${domainColor(jDomain)}">${domainLabel(jDomain)}</strong>
+              </div>
+              <div style="font-size:11px;color:${fitColor(fit)};margin-top:4px;font-weight:700">${fitLabel(fit)} (${fit}%)</div>
+            </div>
+          </div>
+        </div>
+      </td>
+    </tr>`;
+
+    const mainRow=`<tr style="opacity:${comb<40?'.6':'1'}">
+      <td><button class="pipe-expand-btn" id="pex-${safeId}" onclick="togglePipeRow('${esc(j.id)}')" title="Expand">▶</button></td>
+      <td>
+        <div style="font-weight:700;color:var(--text)">${esc(j.title||"—")}</div>
+        <div style="font-size:11px;color:var(--muted)">${esc(j.company||"")}${j.location?` · ${esc(j.location)}`:""}</div>
+      </td>
+      <td>${pipe}</td>
+      <td>
+        <div class="score-bar-wrap">
+          <div class="score-bar-bg"><div class="score-bar-fill" style="width:${comb}%;background:var(--${combCls})"></div></div>
+          <span style="font-size:13px;font-weight:800;color:var(--${combCls})">${comb}%</span>
+        </div>
+      </td>
+      <td style="font-size:12px;color:var(--${atsCls});font-weight:700">${ats}%</td>
+      <td>
+        <span style="font-size:11px;font-weight:700;color:${fitColor(fit)}">${fit}%</span>
+        <span style="font-size:10px;color:var(--muted);margin-left:3px">${fitLabel(fit)}</span>
+      </td>
+      <td>${domainCell}</td>
+      <td style="font-size:11px;color:var(--muted);white-space:nowrap">${esc(j.posted_date||"—")}</td>
+      <td>
+        <select class="status-pipe-sel sp-${esc(j.status||'new')}"
+          onchange="updatePipeStatus('${esc(j.id)}',this.value);this.className='status-pipe-sel sp-'+this.value">
+          ${selOpts}
+        </select>
+      </td>
+      <td class="pipe-actions">
+        <button class="pact-btn" onclick="saveToTrackerFromPipe('${esc(j.id)}')" title="Save to Tracker">📋</button>
+        <button class="pact-btn" onclick="openGapFromTracker('${esc(j.title||"")}')" title="Analyze skill gap">📈</button>
+      </td>
+    </tr>${detailRow}`;
+    return mainRow;
+  }).join("");
+}
+
+function saveToTrackerFromPipe(jobId){
+  const job=_pipeJobs.find(j=>j.id===jobId);
+  if(!job)return;
+  showTab("tracker");
+  showAddForm();
+  document.getElementById("af-role").value=job.title||"";
+  document.getElementById("af-company").value=job.company||"";
+  document.getElementById("af-url").value=job.url||"";
+  document.getElementById("af-ats").value=job.ats_score||"";
+  document.getElementById("af-resume-ver").value=job.resume_used||"";
+  document.getElementById("af-date").value=new Date().toISOString().split("T")[0];
+  document.getElementById("af-company").focus();
+}
+
+// ── INSIGHTS ──────────────────────────────────────────────────────────────────
+async function loadInsights(){
+  // Score history
+  try{
+    const d=await fetch("/api/insights/history?limit=50").then(r=>r.json());
+    renderHistory(d.history||[]);
+  }catch(e){document.getElementById("history-tbody").innerHTML=`<tr><td colspan="8" class="insights-empty">⚠ ${esc(e.message)}</td></tr>`;}
+  // Keyword gaps
+  try{
+    const d=await fetch("/api/insights/keywords?limit=30").then(r=>r.json());
+    renderKeywords(d.keywords||[]);
+  }catch(e){document.getElementById("kw-gap-tbody").innerHTML=`<tr><td colspan="5" class="insights-empty">⚠ ${esc(e.message)}</td></tr>`;}
+  // Top filled keywords
+  try{
+    const d=await fetch("/api/insights/keywords?limit=30").then(r=>r.json());
+    renderHitKeywords(d.keywords||[]);
+  }catch{}
+}
+
+function renderHistory(hist){
+  const tbody=document.getElementById("history-tbody");
+  if(!hist.length){tbody.innerHTML=`<tr><td colspan="8" class="insights-empty">No scoring sessions yet — use the ATS Scorer tab to start.</td></tr>`;return;}
+  const vMap={"STRONG FIT":"vc-strong","GOOD FIT":"vc-good","POSSIBLE":"vc-possible","WEAK FIT":"vc-weak"};
+  tbody.innerHTML=hist.map(h=>{
+    const atsCls=h.ats_score>=75?"hot":h.ats_score>=50?"ok":"skip";
+    const recCls=h.recruiter_score>=75?"hot":h.recruiter_score>=50?"ok":"skip";
+    const qualCls=h.quality_score>=75?"hot":h.quality_score>=50?"ok":"skip";
+    const vcls2=vMap[h.verdict]||"vc-weak";
+    return`<tr>
+      <td style="font-size:11px;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(h.resume_name)}">${esc(h.resume_name||"—")}</td>
+      <td style="font-size:11px;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(h.jd_title)}">${esc(h.jd_title||"Manual")}</td>
+      <td>
+        <div class="score-bar-wrap">
+          <div class="score-bar-bg"><div class="score-bar-fill" style="width:${h.ats_score||0}%;background:var(--${atsCls})"></div></div>
+          <span style="font-size:12px;font-weight:700;color:var(--${atsCls})">${h.ats_score||0}%</span>
+        </div>
+      </td>
+      <td><span style="font-size:12px;font-weight:700;color:var(--${recCls})">${h.recruiter_score||0}</span></td>
+      <td><span style="font-size:12px;font-weight:700;color:var(--${qualCls})">${h.quality_score||0}</span></td>
+      <td style="font-size:11px">${esc(h.interview_chance||"—")}</td>
+      <td><span class="verdict-chip ${vcls2}">${esc(h.verdict||"—")}</span></td>
+      <td style="font-size:10px;color:var(--muted);white-space:nowrap">${(h.scored_at||"").replace("T"," ").slice(0,16)}</td>
+    </tr>`;
+  }).join("");
+}
+
+function renderKeywords(kws){
+  const gaps=kws.filter(k=>k.times_as_gap>0).sort((a,b)=>b.times_as_gap-a.times_as_gap);
+  const maxGap=gaps[0]?.times_as_gap||1;
+  const tbody=document.getElementById("kw-gap-tbody");
+  if(!gaps.length){tbody.innerHTML=`<tr><td colspan="5" class="insights-empty">No keyword gaps logged yet.</td></tr>`;return;}
+  tbody.innerHTML=gaps.map(k=>{
+    const pct=Math.round((k.times_as_gap/maxGap)*100);
+    return`<tr>
+      <td style="font-weight:700;color:var(--skip)">${esc(k.keyword)}</td>
+      <td style="font-size:11px;color:var(--muted)">${esc(k.role_context)}</td>
+      <td style="font-weight:700;color:var(--skip)">${k.times_as_gap}</td>
+      <td style="font-size:12px;color:var(--muted)">${k.times_seen}</td>
+      <td><div class="kw-freq-bar"><div class="kw-freq-bg"><div class="kw-freq-fill" style="width:${pct}%"></div></div></div></td>
+    </tr>`;
+  }).join("");
+}
+
+function renderHitKeywords(kws){
+  const hits=kws.filter(k=>k.times_filled>0).sort((a,b)=>b.times_filled-a.times_filled);
+  const tbody=document.getElementById("kw-hit-tbody");
+  if(!hits.length){tbody.innerHTML=`<tr><td colspan="4" class="insights-empty">No keyword matches logged yet.</td></tr>`;return;}
+  tbody.innerHTML=hits.map(k=>`<tr>
+    <td style="font-weight:700;color:var(--hot)">${esc(k.keyword)}</td>
+    <td style="font-size:11px;color:var(--muted)">${esc(k.role_context)}</td>
+    <td style="font-weight:700;color:var(--hot)">${k.times_filled}</td>
+    <td style="font-size:11px;color:var(--muted)">${(k.last_seen_date||"").slice(0,10)}</td>
+  </tr>`).join("");
 }
 
 // ── Utilities ─────────────────────────────────────────────────────────────────
