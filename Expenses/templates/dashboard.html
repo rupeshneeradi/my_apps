@@ -176,13 +176,11 @@
               <th>Account</th>
               <th class="text-end">Charges</th>
               <th class="text-end text-success">Paid</th>
-              <th class="text-end">Net</th>
             </tr>
           </thead>
           <tbody>
             {% for a in account_breakdown %}
             {% if a.total > 0 or a.credits > 0 %}
-            {% set a_net = a.total - a.credits %}
             <tr>
               <td>
                 <a href="{{ url_for('transactions', month=month, year=year, account_id=a.id) }}"
@@ -200,7 +198,6 @@
                   <small>${{ "%.2f"|format(a.credits) }}</small>
                 {% else %}<span class="text-muted">—</span>{% endif %}
               </td>
-              <td class="text-end fw-bold">${{ "%.2f"|format(a_net) }}</td>
             </tr>
             {% endif %}
             {% endfor %}
@@ -210,7 +207,6 @@
               <td>Total</td>
               <td class="text-end">${{ "%.2f"|format(charges) }}</td>
               <td class="text-end text-success">${{ "%.2f"|format(period_totals.credits) }}</td>
-              <td class="text-end">${{ "%.2f"|format(charges - period_totals.credits) }}</td>
             </tr>
           </tfoot>
         </table>
