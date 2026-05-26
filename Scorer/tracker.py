@@ -29,20 +29,113 @@ def _conn():
 
 def init_db():
     with _conn() as c:
+        # ── Application Tracker ──────────────────────────────────────────────
         c.execute("""
             CREATE TABLE IF NOT EXISTS applications (
-                id           INTEGER PRIMARY KEY AUTOINCREMENT,
+                id             INTEGER PRIMARY KEY AUTOINCREMENT,
+                company        TEXT    DEFAULT '',
+                role           TEXT    DEFAULT '',
+                jd_url         TEXT    DEFAULT '',
+                jd_text        TEXT    DEFAULT '',
+                date_applied   TEXT    DEFAULT '',
+                status         TEXT    DEFAULT 'applied',
+                ats_score      INTEGER DEFAULT NULL,
+                resume_version TEXT    DEFAULT '',
+                salary_range   TEXT    DEFAULT '',
+                source         TEXT    DEFAULT '',
+                notes          TEXT    DEFAULT '',
+                created_at     TEXT    DEFAULT (strftime('%Y-%m-%dT%H:%M:%S','now')),
+                updated_at     TEXT    DEFAULT (strftime('%Y-%m-%dT%H:%M:%S','now'))
+            )
+        """)
+        # Migrate older DBs
+        for col, defn in [("jd_text","TEXT DEFAULT ''"),
+                          ("resume_version","TEXT DEFAULT ''")]:
+            try:
+                c.execute(f"ALTER TABLE applications ADD COLUMN {col} {defn}")
+            except Exception:
+                pass
+
+        # ── Scraped Jobs (pipeline data) ─────────────────────────────────────
+        c.execute("""
+            CREATE TABLE IF NOT EXISTS scraped_jobs (
+                id           TEXT    PRIMARY KEY,
+                pipeline     TEXT    NOT NULL DEFAULT 'opt',
+                title        TEXT    DEFAULT '',
                 company      TEXT    DEFAULT '',
-                role         TEXT    DEFAULT '',
-                jd_url       TEXT    DEFAULT '',
-                date_applied TEXT    DEFAULT '',
-                status       TEXT    DEFAULT 'applied',
-                ats_score    INTEGER DEFAULT NULL,
+                location     TEXT    DEFAULT '',
+                url          TEXT    DEFAULT '',
+                portal       TEXT    DEFAULT '',
+                job_type     TEXT    DEFAULT '',
+                jd_text      TEXT    DEFAULT '',
+                jd_keywords  TEXT    DEFAULT '[]',
+                ats_score    INTEGER DEFAULT 0,
+                resume_used  TEXT    DEFAULT '',
+                matched_kws  TEXT    DEFAULT '[]',
+                gap_kws      TEXT    DEFAULT '[]',
+                gap_critical TEXT    DEFAULT '[]',
+                gap_required TEXT    DEFAULT '[]',
+                gap_preferred TEXT   DEFAULT '[]',
+                opt_friendly INTEGER DEFAULT 0,
+                opt_score    INTEGER DEFAULT 0,
+                is_remote    INTEGER DEFAULT 0,
+                emp_type     TEXT    DEFAULT '',
                 salary_range TEXT    DEFAULT '',
-                source       TEXT    DEFAULT '',
-                notes        TEXT    DEFAULT '',
-                created_at   TEXT    DEFAULT (strftime('%Y-%m-%dT%H:%M:%S','now')),
-                updated_at   TEXT    DEFAULT (strftime('%Y-%m-%dT%H:%M:%S','now'))
+                posted_date  TEXT    DEFAULT '',
+                scraped_date TEXT    DEFAULT '',
+                scored_at    TEXT    DEFAULT '',
+                status        TEXT    DEFAULT 'new',
+                resume_domain TEXT    DEFAULT '',
+                jd_domain     TEXT    DEFAULT '',
+                role_fit_score INTEGER DEFAULT 0,
+                combined_score INTEGER DEFAULT 0
+            )
+        """)
+
+        # Migrate older scraped_jobs rows (add new columns if missing)
+        for col, defn in [
+            ("resume_domain",  "TEXT    DEFAULT ''"),
+            ("jd_domain",      "TEXT    DEFAULT ''"),
+            ("role_fit_score", "INTEGER DEFAULT 0"),
+            ("combined_score", "INTEGER DEFAULT 0"),
+        ]:
+            try:
+                c.execute(f"ALTER TABLE scraped_jobs ADD COLUMN {col} {defn}")
+            except Exception:
+                pass
+
+        # ── Score History (every ATS scoring session) ────────────────────────
+        c.execute("""
+            CREATE TABLE IF NOT EXISTS score_history (
+                id              INTEGER PRIMARY KEY AUTOINCREMENT,
+                resume_name     TEXT    DEFAULT '',
+                jd_title        TEXT    DEFAULT '',
+                jd_text         TEXT    DEFAULT '',
+                ats_score       INTEGER DEFAULT 0,
+                recruiter_score INTEGER DEFAULT 0,
+                quality_score   INTEGER DEFAULT 0,
+                interview_chance TEXT   DEFAULT '',
+                verdict         TEXT    DEFAULT '',
+                matched_kws     TEXT    DEFAULT '[]',
+                gap_kws         TEXT    DEFAULT '[]',
+                gap_critical    TEXT    DEFAULT '[]',
+                gap_required    TEXT    DEFAULT '[]',
+                gap_preferred   TEXT    DEFAULT '[]',
+                scraped_job_id  TEXT    DEFAULT NULL,
+                scored_at       TEXT    DEFAULT (strftime('%Y-%m-%dT%H:%M:%S','now'))
+            )
+        """)
+
+        # ── Keyword Log (recurring gaps & trends) ────────────────────────────
+        c.execute("""
+            CREATE TABLE IF NOT EXISTS keyword_log (
+                keyword        TEXT NOT NULL,
+                role_context   TEXT NOT NULL DEFAULT '',
+                times_seen     INTEGER DEFAULT 0,
+                times_as_gap   INTEGER DEFAULT 0,
+                times_filled   INTEGER DEFAULT 0,
+                last_seen_date TEXT    DEFAULT '',
+                PRIMARY KEY (keyword, role_context)
             )
         """)
 
@@ -59,8 +152,8 @@ def add_application(d: dict) -> dict:
     with _conn() as c:
         cur = c.execute(
             """INSERT INTO applications
-               (company,role,jd_url,date_applied,status,ats_score,salary_range,source,notes)
-               VALUES (?,?,?,?,?,?,?,?,?)""",
+               (company,role,jd_url,date_applied,status,ats_score,salary_range,source,notes,resume_version)
+               VALUES (?,?,?,?,?,?,?,?,?,?)""",
             (
                 (d.get("company") or "").strip(),
                 (d.get("role")    or "").strip(),
@@ -68,9 +161,10 @@ def add_application(d: dict) -> dict:
                 (d.get("date_applied") or datetime.now().strftime("%Y-%m-%d")),
                 d.get("status", "applied"),
                 d.get("ats_score") or None,
-                (d.get("salary_range") or "").strip(),
-                (d.get("source")       or "").strip(),
-                (d.get("notes")        or "").strip(),
+                (d.get("salary_range")   or "").strip(),
+                (d.get("source")         or "").strip(),
+                (d.get("notes")          or "").strip(),
+                (d.get("resume_version") or "").strip(),
             ),
         )
         new_id = cur.lastrowid
@@ -95,7 +189,7 @@ def list_applications(status: str | None = None) -> list[dict]:
 def update_application(id: int, d: dict) -> dict | None:
     init_db()
     allowed = {"company", "role", "jd_url", "date_applied", "status",
-               "ats_score", "salary_range", "source", "notes"}
+               "ats_score", "salary_range", "source", "notes", "resume_version"}
     updates = {k: v for k, v in d.items() if k in allowed}
     if not updates:
         return _row(id)

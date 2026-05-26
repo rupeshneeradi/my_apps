@@ -170,19 +170,59 @@ SEARCH_QUERIES: dict[str, list[str]] = {
     ],
 }
 
+# ── Defense contractor blocklist (always require clearance → ineligible for OPT)
+DEFENSE_COMPANY_BLOCKLIST: list[str] = [
+    # Prime defense contractors
+    "general dynamics", "gdit", "leidos", "peraton", "saic",
+    "booz allen", "northrop grumman", "raytheon", "rtx corporation",
+    "mantech", "bae systems", "l3harris", "caci", "parsons corporation",
+    "mitre corporation", "mitre corp",
+    "science applications international",
+    # Federal consulting arms of large firms
+    "accenture federal", "deloitte government", "deloitte federal",
+    "ibm federal", "kpmg federal",
+    # Other frequent clearance shops
+    "anduril", "palantir", "titan defense",
+    "sierra nevada corporation", "cubic defense",
+    "dxc federal", "nci information systems",
+    "engility", "maximus federal", "perspecta",
+    "chenega", "amentum", "vectrus",
+]
+
 # ── OPT eligibility filters ───────────────────────────────────────────────────
 OPT_HARD_EXCLUDE: list[str] = [
+    # Citizenship / PR requirements
     "us citizen only", "u.s. citizen only", "united states citizen only",
     "must be a us citizen", "must be us citizen", "citizens only",
     "green card only", "green card holder only", "permanent resident only",
     "pr only", "usc only", "usc/gc only", "us citizen or green card",
-    "must have green card",
+    "must have green card", "citizenship required",
+    "authorized to work in the us without sponsorship",
+    "work authorization without sponsorship",
+    "must be authorized to work without sponsorship",
+    # Security clearance variants
     "security clearance required", "clearance required", "active clearance",
     "secret clearance", "top secret", "ts/sci", "ts-sci", "secret/sci",
     "public trust clearance", "dod clearance", "must have clearance",
     "must hold clearance", "must possess clearance",
+    "clearance is required", "clearance required for this role",
+    "active security clearance", "current security clearance",
+    "must be clearance eligible", "clearance eligible required",
+    "q clearance", "sci eligible", "eligible for clearance",
+    # Polygraph
+    "polygraph required", "polygraph test required",
+    "must pass polygraph", "lie detector", "full scope polygraph",
+    # ITAR / DoD / federal program restrictions
+    "itar", "itar restricted", "itar compliance required", "ear compliance",
+    "itar regulations", "subject to itar",
+    "department of defense contract", "dod project", "dod program",
+    "federal contract", "classified contract", "classified environment",
+    "classified information", "classified projects",
+    "nsa", "cia clearance", "dhs clearance",
+    # OPT explicit rejections
     "no opt", "no cpt", "no f1", "opt not accepted", "no opt/cpt",
-    "opt/cpt not accepted",
+    "opt/cpt not accepted", "no f1 opt", "no f-1",
+    "not eligible for opt", "opt is not supported",
 ]
 
 OPT_POSITIVE: list[str] = [
@@ -215,10 +255,53 @@ ENTRY_MID_SIGNALS: list[str] = [
 ]
 
 SENIOR_HARD_EXCLUDE: list[str] = [
+    # Leadership / executive — always exclude
     "director", "vp of", "vice president", "head of",
     "engineering manager", "staff engineer", "principal engineer",
     "distinguished engineer", "fellow engineer",
     "chief", "cto", "ciso",
+    # Additional senior-level patterns caught by exact substring
+    "senior staff", "principal staff", "chief engineer",
+    "technical director", "engineering director", "director of engineering",
+]
+
+# Regex-style seniority patterns (applied as word-boundary regex, not substring)
+# These catch cases like "Staff Fiber Network Engineer" where exact-string fails.
+SENIOR_REGEX_PATTERNS: list[str] = [
+    r"\bstaff\b",         # "Staff" as seniority prefix (any title: "Staff SRE", "Staff Fiber Network Engineer")
+    r"\bprincipal\b",     # "Principal Cloud Architect" etc.
+    r"\bsenior\b",        # redundant with SENIOR_SOFT but catches mis-spellings / all-caps
+    r"\bsr\.\s",          # "Sr. DevOps" (with period)
+    r"\bsr\s",            # "Sr DevOps" (without period)
+    r"\bdistinguished\b", # Google/Amazon "Distinguished Engineer"
+    r"\bfellow\b",        # "Fellow Engineer"
+    r"\blead\b.{0,35}\bengineer\b",  # "Lead Controls Engineer", "Lead Design Release Engineer"
+]
+
+# Non-IT industries — titles containing these signals are NOT software engineering jobs
+# Used to reject: manufacturing/automotive/telecom/biotech roles that use words like
+# "engineer", "cloud", or "devops" in non-software context.
+NON_IT_TITLE_SIGNALS: list[str] = [
+    # Manufacturing / industrial
+    "controls engineer", "controls & reliability", "reliability service engineer",
+    "process engineer", "manufacturing engineer", "production engineer",
+    "plant engineer", "field service engineer", "maintenance engineer",
+    "quality engineer", "test engineer", "validation engineer",
+    "design release engineer", "product launch engineer",
+    "environmental engineer", "safety engineer", "mechanical engineer",
+    "electrical engineer", "chemical engineer", "civil engineer",
+    "structural engineer", "aerospace engineer", "automotive engineer",
+    "hvac engineer", "facilities engineer", "operations engineer",
+    # Telecom / non-software
+    "fiber network engineer", "fiber engineer", "rf engineer",
+    "telecom engineer", "telecommunications engineer",
+    "transmission engineer", "cable engineer", "broadband engineer",
+    # Healthcare / biotech
+    "clinical engineer", "biomedical engineer", "medical device engineer",
+    "bioinformatics engineer", "lab engineer",
+    # Construction / utilities
+    "construction engineer", "project engineer construction",
+    "utility engineer", "power engineer", "energy engineer",
 ]
 
 SENIOR_SOFT: list[str] = [

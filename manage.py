@@ -52,7 +52,7 @@ APPS: dict[str, dict] = {
         "dir":    BASE / "Scorer",
         "cmd":    [sys.executable, "app.py"],
         "port":   5055,
-        "url":    "http://resumechecker:5055",
+        "url":    "http://ruperesumechecker:5055",
         "type":   "web",
         "env":    {},
     },

@@ -19,6 +19,11 @@ from docx_report import generate_report_docx
 from tracker import init_db, add_application, list_applications, update_application, delete_application, get_stats
 from gap_analyzer import analyze_gap, AVAILABLE_ROLES
 from builder_docx import generate_resume_docx
+from jobs_sync import (
+    sync_opt_pipeline, sync_portal_pipeline,
+    list_pipeline_jobs, get_pipeline_job, update_pipeline_status, pipeline_stats,
+    log_score_session, list_score_history, top_keyword_gaps,
+)
 
 # Ensure tracker DB is ready on startup
 init_db()
@@ -183,6 +188,30 @@ def score():
         })
 
     results.sort(key=lambda r: (r["recruiter_score"], r["ats_score"]), reverse=True)
+
+    # ── Auto-log every scoring session to score_history + keyword_log ─────────
+    scraped_job_id = (data.get("scraped_job_id") or "").strip() or None
+    for res in results:
+        try:
+            log_score_session({
+                "resume_name":     res["resume"],
+                "jd_title":        jd_title,
+                "jd_text":         jd_text,
+                "ats_score":       res.get("ats_score", 0),
+                "recruiter_score": res.get("recruiter_score", 0),
+                "quality_score":   res.get("quality_score", 0),
+                "interview_chance":res.get("interview_chance", ""),
+                "verdict":         res.get("verdict", ""),
+                "matched_kws":     res.get("matched", []),
+                "gap_kws":         res.get("missing", []),
+                "gap_critical":    res.get("gap_critical", []),
+                "gap_required":    res.get("gap_required", []),
+                "gap_preferred":   res.get("gap_preferred", []),
+                "scraped_job_id":  scraped_job_id,
+            })
+        except Exception as _e:
+            log.warning("score_history log failed: %s", _e)
+
     return jsonify({"results": results, "total": len(results), "jd_title": jd_title})
 
 
@@ -296,6 +325,87 @@ def builder_generate():
         as_attachment=True,
         download_name=f"{safe}_resume.docx",
     )
+
+
+# ── Pipeline API ──────────────────────────────────────────────────────────────
+
+@app.route("/api/pipeline/sync", methods=["POST"])
+def pipeline_sync():
+    """Sync OPT and/or portal pipeline jobs → ATS score → store."""
+    data     = request.get_json(silent=True) or {}
+    which    = data.get("pipeline", "all")   # "opt" | "portal" | "all"
+    threshold= int(data.get("threshold", 40))
+
+    try:
+        resumes = _get_resumes()
+    except Exception as e:
+        return jsonify({"error": f"Could not load resumes: {e}"}), 500
+
+    if not resumes:
+        return jsonify({"error": "No resumes found. Check Google Drive connection."}), 500
+
+    results = {}
+    if which in ("opt", "all"):
+        try:
+            results["opt"] = sync_opt_pipeline(resumes, threshold=threshold)
+        except Exception as e:
+            log.error("OPT pipeline sync error: %s", e)
+            results["opt"] = {"pipeline": "opt", "error": str(e), "read": 0, "stored": 0}
+
+    if which in ("portal", "all"):
+        try:
+            results["portal"] = sync_portal_pipeline(resumes, threshold=threshold)
+        except Exception as e:
+            log.error("Portal pipeline sync error: %s", e)
+            results["portal"] = {"pipeline": "portal", "error": str(e), "read": 0, "stored": 0}
+
+    return jsonify({"ok": True, "results": results})
+
+
+@app.route("/api/pipeline/list")
+def pipeline_list():
+    pipeline = request.args.get("pipeline") or None  # "opt" | "portal" | None=all
+    min_ats  = int(request.args.get("min_ats", 0))
+    status   = request.args.get("status") or None
+    jobs = list_pipeline_jobs(pipeline=pipeline, min_ats=min_ats, status=status)
+    return jsonify({"jobs": jobs, "total": len(jobs)})
+
+
+@app.route("/api/pipeline/job/<path:job_id>")
+def pipeline_job_detail(job_id):
+    job = get_pipeline_job(job_id)
+    if not job:
+        return jsonify({"error": "Not found"}), 404
+    return jsonify({"job": job})
+
+
+@app.route("/api/pipeline/update/<path:job_id>", methods=["PATCH", "PUT"])
+def pipeline_update(job_id):
+    data   = request.get_json(silent=True) or {}
+    status = data.get("status", "")
+    if not status:
+        return jsonify({"error": "status field required"}), 400
+    update_pipeline_status(job_id, status)
+    return jsonify({"ok": True})
+
+
+@app.route("/api/pipeline/stats")
+def pipeline_stats_route():
+    return jsonify(pipeline_stats())
+
+
+# ── Insights API ──────────────────────────────────────────────────────────────
+
+@app.route("/api/insights/history")
+def insights_history():
+    limit = int(request.args.get("limit", 50))
+    return jsonify({"history": list_score_history(limit=limit)})
+
+
+@app.route("/api/insights/keywords")
+def insights_keywords():
+    limit = int(request.args.get("limit", 30))
+    return jsonify({"keywords": top_keyword_gaps(limit=limit)})
 
 
 if __name__ == "__main__":

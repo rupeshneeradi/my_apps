@@ -16,6 +16,7 @@ from typing import Optional
 
 # ── Canonical alias map (normalize keyword variants) ──────────────────────────
 ALIASES: dict[str, str] = {
+    # Oracle / ERP
     "hdl":           "hcm data loader",
     "hdi":           "hcm spreadsheet loader",
     "fastformula":   "fast formula",
@@ -50,6 +51,74 @@ ALIASES: dict[str, str] = {
     "oracle ebs":    "oracle e-business suite",
     "e-business suite": "oracle e-business suite",
     "oracle e business suite": "oracle e-business suite",
+    # DevOps
+    "k8s":           "kubernetes",
+    "cicd":          "ci/cd",
+    "ci cd":         "ci/cd",
+    "github actions": "ci/cd",
+    "gitlab ci":     "ci/cd",
+    "jenkins":       "ci/cd",
+    "iac":           "infrastructure as code",
+    "prom":          "prometheus",
+    "grafana":       "prometheus",
+    "alertmanager":  "prometheus",
+    # AI/ML
+    "langGraph":     "langchain",
+    "lang chain":    "langchain",
+    "retrieval augmented generation": "rag",
+    "vector database": "rag",
+    "pytorch":       "pytorch",
+    "torch":         "pytorch",
+    "tensorflow":    "pytorch",
+    "hugging face":  "pytorch",
+    "experiment tracking": "mlflow",
+    "model registry": "mlflow",
+    "large language model": "llm",
+    "llms":          "llm",
+    "openai":        "llm",
+    "gpt-4":         "llm",
+    "anthropic":     "llm",
+    # Security
+    "ztna":          "zero trust",
+    "zero-trust":    "zero trust",
+    "pentest":       "penetration testing",
+    "pentesting":    "penetration testing",
+    "vulnerability assessment": "penetration testing",
+    "splunk":        "siem",
+    "sentinel":      "siem",
+    "qradar":        "siem",
+    "dev sec ops":   "devsecops",
+    # Full Stack
+    "react.js":      "react",
+    "reactjs":       "react",
+    "next.js":       "react",
+    "vue.js":        "react",
+    "angular":       "react",
+    "spring":        "spring boot",
+    "spring framework": "spring boot",
+    "grpc":          "microservices",
+    "event-driven":  "microservices",
+    # QA
+    "selenium webdriver": "selenium",
+    "cypress":       "selenium",
+    "playwright":    "selenium",
+    "junit":         "pytest",
+    "testng":        "pytest",
+    "bdd":           "pytest",
+    "cucumber":      "pytest",
+    "rest assured":  "api testing",
+    "postman":       "api testing",
+    "jmeter":        "performance testing",
+    "k6":            "performance testing",
+    "gatling":       "performance testing",
+    # Modern Data Eng
+    "data build tool": "dbt",
+    "apache kafka":  "kafka",
+    "kafka streams": "kafka",
+    "apache airflow": "airflow",
+    "cloud composer": "airflow",
+    "mwaa":          "airflow",
+    "pyspark":       "spark",
 }
 
 # ── Phrase bank ───────────────────────────────────────────────────────────────
@@ -751,6 +820,466 @@ PHRASE_BANK: dict[str, dict] = {
         "exp_slot": "exp2",
         "recruiter_why": "Data modeling separates architects from developers — listing it targets higher-value roles.",
     },
+
+    # ══ DEVOPS / CLOUD ════════════════════════════════════════════════════════
+
+    "kubernetes": {
+        "skill_entry": "Kubernetes (K8s) | Helm | Kustomize | Container Orchestration | EKS/AKS/GKE",
+        "bullets": [
+            "Designed and managed production Kubernetes clusters on AWS EKS, deploying "
+            "microservices using Helm charts, HPA auto-scaling, and rolling update strategies, "
+            "achieving 99.9% uptime SLA and reducing deployment incidents by 60%.",
+
+            "Implemented Kubernetes RBAC, network policies, and pod security standards "
+            "across multi-tenant namespaces, securing workloads per CIS Kubernetes Benchmark "
+            "and integrating OPA Gatekeeper for policy enforcement.",
+        ],
+        "summary_tag": "Kubernetes container orchestration",
+        "exp_slot": "exp1",
+        "recruiter_why": "Kubernetes is the #1 skill in DevOps JDs — without it, most pipelines auto-screen you out.",
+    },
+
+    "terraform": {
+        "skill_entry": "Terraform | Infrastructure as Code (IaC) | Terraform Cloud | Atlantis | State Management",
+        "bullets": [
+            "Authored modular Terraform configurations to provision AWS/Azure cloud infrastructure "
+            "(VPC, EKS, RDS, IAM roles, S3, CloudFront) across dev/staging/prod environments, "
+            "reducing manual provisioning time from days to under 30 minutes.",
+
+            "Implemented Terraform remote state with S3 backend + DynamoDB locking, "
+            "enforced module versioning through private Terraform registry, and integrated "
+            "tfsec and Checkov into CI/CD for pre-deploy security scanning.",
+        ],
+        "summary_tag": "Terraform infrastructure-as-code",
+        "exp_slot": "exp1",
+        "recruiter_why": "Terraform appears in 75% of DevOps/Cloud JDs — it's the IaC lingua franca employers expect.",
+    },
+
+    "ci/cd": {
+        "skill_entry": "CI/CD | Jenkins | GitHub Actions | GitLab CI | ArgoCD | GitOps",
+        "bullets": [
+            "Designed end-to-end CI/CD pipelines using GitHub Actions and ArgoCD to automate "
+            "build, test, security scan (SAST/DAST), containerization, and Kubernetes deployment, "
+            "cutting release cycle from bi-weekly to on-demand multiple-times-per-day delivery.",
+
+            "Migrated 40+ legacy Jenkins pipelines to declarative Jenkinsfile and GitHub Actions "
+            "workflows, standardizing environment variables, secret injection via HashiCorp Vault, "
+            "and parallel test execution, reducing average build time by 45%.",
+        ],
+        "summary_tag": "CI/CD pipeline design and automation",
+        "exp_slot": "exp1",
+        "recruiter_why": "CI/CD is the core DevOps competency — every job posting lists it; missing it means automatic screen-out.",
+    },
+
+    "docker": {
+        "skill_entry": "Docker | Containerization | Docker Compose | Multi-stage Builds | Container Registry",
+        "bullets": [
+            "Containerized 15+ microservices using Docker multi-stage builds, reducing image sizes "
+            "by 70% through distroless base images and layer caching optimization, and published "
+            "to AWS ECR with automated vulnerability scanning via Trivy.",
+
+            "Authored Docker Compose configurations for local development environments replicating "
+            "production topology (app, database, cache, message broker), enabling engineers to "
+            "onboard and run full-stack services within minutes.",
+        ],
+        "summary_tag": "Docker containerization",
+        "exp_slot": "exp1",
+        "recruiter_why": "Docker is baseline for DevOps/SWE roles — its absence signals limited cloud-native experience.",
+    },
+
+    "ansible": {
+        "skill_entry": "Ansible | Configuration Management | Playbooks | Ansible Tower/AWX | Automation",
+        "bullets": [
+            "Developed Ansible playbooks and roles to automate OS hardening, package installation, "
+            "user provisioning, and application deployment across 200+ servers, replacing "
+            "manual runbooks and eliminating configuration drift.",
+
+            "Integrated Ansible with CI/CD pipelines to enforce idempotent infrastructure "
+            "configuration, using Ansible Tower for role-based access, scheduling, and "
+            "centralized audit logging of automation runs.",
+        ],
+        "summary_tag": "Ansible configuration management",
+        "exp_slot": "exp2",
+        "recruiter_why": "Ansible is the top configuration management tool in enterprise DevOps — shows automation breadth.",
+    },
+
+    "prometheus": {
+        "skill_entry": "Prometheus | Grafana | Observability | Alertmanager | Metrics | Dashboards",
+        "bullets": [
+            "Deployed Prometheus + Grafana monitoring stack on Kubernetes using kube-prometheus-stack "
+            "Helm chart, creating dashboards for cluster health, service SLOs, and business KPIs; "
+            "configured Alertmanager for PagerDuty and Slack escalation routing.",
+
+            "Instrumented Python and Go microservices with Prometheus client libraries, "
+            "exposing custom business metrics (request rate, error budget, queue depth) "
+            "alongside infrastructure metrics for end-to-end observability.",
+        ],
+        "summary_tag": "Prometheus/Grafana observability stack",
+        "exp_slot": "exp1",
+        "recruiter_why": "Observability is mandatory for SRE/Platform roles — Prometheus+Grafana is the standard stack.",
+    },
+
+    "infrastructure as code": {
+        "skill_entry": "Infrastructure as Code (IaC) | Terraform | CloudFormation | Pulumi | GitOps",
+        "bullets": [
+            "Implemented IaC strategy across all cloud accounts using Terraform with modular design, "
+            "remote state, and policy-as-code guardrails, enabling full environment rebuild "
+            "from scratch in under 20 minutes and eliminating snowflake servers.",
+
+            "Established GitOps workflow with IaC: all infrastructure changes went through "
+            "pull requests, automated plan reviews, and ArgoCD drift detection, "
+            "providing full change audit trail and rollback capability.",
+        ],
+        "summary_tag": "infrastructure as code strategy",
+        "exp_slot": "exp1",
+        "recruiter_why": "IaC is the #1 DevOps principle — listing it with concrete tools shows strategic thinking.",
+    },
+
+    # ══ AI / ML ═══════════════════════════════════════════════════════════════
+
+    "langchain": {
+        "skill_entry": "LangChain | LangGraph | RAG | LLM Orchestration | Agent Pipelines",
+        "bullets": [
+            "Built production RAG (Retrieval-Augmented Generation) pipeline using LangChain, "
+            "OpenAI embeddings, and Pinecone vector store to enable semantic search over 50K+ "
+            "enterprise documents, reducing support ticket resolution time by 40%.",
+
+            "Developed multi-agent LangGraph workflows for automated document processing, "
+            "integrating tool-calling, memory management, and human-in-the-loop checkpoints, "
+            "handling 1,000+ daily requests with sub-3-second P95 latency.",
+        ],
+        "summary_tag": "LangChain/LLM application development",
+        "exp_slot": "exp1",
+        "recruiter_why": "LangChain is the most-cited LLM framework in AI engineering JDs — it signals practical GenAI experience.",
+    },
+
+    "rag": {
+        "skill_entry": "RAG | Vector Databases (Pinecone/ChromaDB/Weaviate) | Embeddings | Semantic Search",
+        "bullets": [
+            "Designed Retrieval-Augmented Generation (RAG) system using OpenAI text-embedding-3-large, "
+            "ChromaDB vector store, and LangChain for document chunking, retrieval, and LLM synthesis, "
+            "achieving 85% answer accuracy on domain-specific Q&A evaluation set.",
+
+            "Implemented advanced RAG techniques including hybrid search (dense + sparse), "
+            "re-ranking with cross-encoders, and query decomposition, improving precision@5 "
+            "retrieval score by 28% over baseline similarity search.",
+        ],
+        "summary_tag": "RAG pipeline architecture",
+        "exp_slot": "exp1",
+        "recruiter_why": "RAG is the foundational GenAI pattern — every AI engineer JD now expects it.",
+    },
+
+    "pytorch": {
+        "skill_entry": "PyTorch | Deep Learning | Neural Networks | Model Training | CUDA",
+        "bullets": [
+            "Trained transformer-based classification models in PyTorch, implementing custom "
+            "dataset loaders, mixed-precision training (AMP), gradient accumulation, and "
+            "learning rate scheduling, achieving 94% F1 on production classification task.",
+
+            "Fine-tuned pre-trained Hugging Face models (BERT, RoBERTa, LLaMA) using PEFT/LoRA "
+            "for domain-specific NLP tasks, reducing training compute cost by 70% vs. full "
+            "fine-tuning while maintaining performance within 2% of full-tuning baseline.",
+        ],
+        "summary_tag": "PyTorch deep learning model development",
+        "exp_slot": "exp1",
+        "recruiter_why": "PyTorch is the dominant ML framework — it's in nearly every ML/AI engineer job description.",
+    },
+
+    "mlflow": {
+        "skill_entry": "MLflow | Experiment Tracking | Model Registry | ML Pipeline Management",
+        "bullets": [
+            "Implemented MLflow experiment tracking across team ML projects, logging parameters, "
+            "metrics, and artifacts for every training run, enabling reproducibility and "
+            "systematic hyperparameter comparison across 200+ experiments.",
+
+            "Deployed MLflow Model Registry as central model governance hub, managing model "
+            "lifecycle states (Staging → Production → Archived), integrating with CI/CD for "
+            "automated model validation before promotion.",
+        ],
+        "summary_tag": "MLflow experiment tracking and model registry",
+        "exp_slot": "exp2",
+        "recruiter_why": "MLflow is the standard MLOps tracking tool — shows you work at production ML scale, not just notebooks.",
+    },
+
+    "llm": {
+        "skill_entry": "LLMs | OpenAI GPT-4 | Anthropic Claude | Prompt Engineering | Fine-tuning",
+        "bullets": [
+            "Integrated OpenAI GPT-4 and Anthropic Claude APIs into customer-facing applications, "
+            "designing structured prompt templates, few-shot examples, and output parsers to deliver "
+            "reliable JSON responses at scale with <1% error rate.",
+
+            "Developed LLM evaluation framework using automated benchmarks and human-in-the-loop "
+            "review to measure hallucination rate, factuality, and instruction-following, "
+            "driving prompt and model selection decisions for production deployment.",
+        ],
+        "summary_tag": "LLM API integration and prompt engineering",
+        "exp_slot": "exp1",
+        "recruiter_why": "LLMs are the hottest skill in tech in 2025 — concrete examples of production LLM work stand out.",
+    },
+
+    # ══ CYBERSECURITY ════════════════════════════════════════════════════════
+
+    "zero trust": {
+        "skill_entry": "Zero Trust Architecture | ZTNA | Identity-Aware Proxy | Microsegmentation",
+        "bullets": [
+            "Architected Zero Trust network access (ZTNA) model for remote workforce, deploying "
+            "Cloudflare Access as identity-aware proxy to replace legacy VPN, reducing attack "
+            "surface by eliminating implicit network trust for 3,000+ users.",
+
+            "Implemented zero trust principles across cloud workloads: workload identity via "
+            "service accounts, mTLS with Istio service mesh, and OPA policy enforcement "
+            "for lateral movement prevention in Kubernetes environments.",
+        ],
+        "summary_tag": "zero trust security architecture",
+        "exp_slot": "exp1",
+        "recruiter_why": "Zero trust is the dominant security model in enterprise — listing it shows architectural thinking.",
+    },
+
+    "penetration testing": {
+        "skill_entry": "Penetration Testing | OWASP | Burp Suite | Kali Linux | Vulnerability Assessment",
+        "bullets": [
+            "Conducted web application penetration tests following OWASP Testing Guide methodology, "
+            "identifying OWASP Top 10 vulnerabilities (SQLi, XSS, IDOR, SSRF) and delivering "
+            "risk-rated findings reports with remediation guidance to development teams.",
+
+            "Performed internal network penetration tests using Nmap, Metasploit, BloodHound, "
+            "and Impacket to identify misconfigurations, privilege escalation paths, and "
+            "lateral movement opportunities, remediating critical findings within 30-day SLA.",
+        ],
+        "summary_tag": "penetration testing and vulnerability assessment",
+        "exp_slot": "exp1",
+        "recruiter_why": "Pentest experience is a premium differentiator — fewer than 20% of security candidates have hands-on experience.",
+    },
+
+    "siem": {
+        "skill_entry": "SIEM | Splunk | Microsoft Sentinel | IBM QRadar | Log Analysis | Threat Detection",
+        "bullets": [
+            "Deployed and tuned Splunk SIEM for 500+ log sources, developing custom correlation "
+            "rules and SPL queries to detect brute force, lateral movement, and data exfiltration "
+            "patterns, reducing mean-time-to-detect (MTTD) by 55%.",
+
+            "Integrated cloud security logs (AWS CloudTrail, Azure Activity Log, GCP Audit) "
+            "into SIEM platform, creating dashboards for SOC analysts covering identity-based "
+            "threats, configuration drift, and anomalous API activity.",
+        ],
+        "summary_tag": "SIEM implementation and threat detection",
+        "exp_slot": "exp1",
+        "recruiter_why": "SIEM/Splunk is foundational for SOC and security engineering roles — recruiters expect it by name.",
+    },
+
+    "devsecops": {
+        "skill_entry": "DevSecOps | SAST/DAST | Snyk | SonarQube | Trivy | Container Security | Policy as Code",
+        "bullets": [
+            "Implemented DevSecOps pipeline integrating Snyk (SCA), SonarQube (SAST), and "
+            "OWASP ZAP (DAST) into GitHub Actions CI/CD, enforcing security quality gates "
+            "that blocked 95% of critical vulnerabilities before reaching production.",
+
+            "Deployed OPA Gatekeeper policies on Kubernetes to enforce container security "
+            "standards (non-root, read-only filesystems, resource limits), and integrated "
+            "Trivy image scanning in ECR push pipeline, achieving 100% compliance.",
+        ],
+        "summary_tag": "DevSecOps pipeline security integration",
+        "exp_slot": "exp1",
+        "recruiter_why": "DevSecOps is the fastest-growing security sub-specialty — 'security shift-left' is now standard.",
+    },
+
+    # ══ FULL STACK / SOFTWARE DEV ════════════════════════════════════════════
+
+    "react": {
+        "skill_entry": "React.js | React Hooks | Redux/Zustand | TypeScript | Next.js",
+        "bullets": [
+            "Developed responsive single-page applications using React with TypeScript, "
+            "implementing reusable component libraries, custom hooks, and Context API for state "
+            "management, achieving 98+ Lighthouse performance score.",
+
+            "Migrated legacy AngularJS application to React + Next.js with server-side rendering, "
+            "reducing initial page load time by 65% and improving SEO indexing, deploying "
+            "with incremental static regeneration on Vercel.",
+        ],
+        "summary_tag": "React.js / Next.js frontend development",
+        "exp_slot": "exp1",
+        "recruiter_why": "React is in 70% of frontend JDs — it's the default SPA framework employers expect.",
+    },
+
+    "spring boot": {
+        "skill_entry": "Spring Boot | Spring MVC | Spring Security | JPA/Hibernate | Microservices",
+        "bullets": [
+            "Built RESTful microservices using Spring Boot with Spring Security (OAuth2/JWT), "
+            "Spring Data JPA for PostgreSQL persistence, and OpenAPI/Swagger documentation, "
+            "deployed on AWS ECS with blue-green deployment strategy.",
+
+            "Implemented event-driven communication between Spring Boot microservices using "
+            "Apache Kafka for asynchronous messaging and Spring Cloud Gateway as API gateway, "
+            "handling 10,000+ TPS at P99 latency under 200ms.",
+        ],
+        "summary_tag": "Spring Boot microservices development",
+        "exp_slot": "exp1",
+        "recruiter_why": "Spring Boot is the dominant Java backend framework — Java roles almost universally require it.",
+    },
+
+    "microservices": {
+        "skill_entry": "Microservices Architecture | REST APIs | gRPC | Event-Driven | Service Mesh",
+        "bullets": [
+            "Decomposed monolithic e-commerce application into 12 microservices following "
+            "Domain-Driven Design principles, enabling independent deployment and scaling, "
+            "reducing release cycle from monthly to daily.",
+
+            "Designed microservices communication patterns including synchronous REST/gRPC for "
+            "real-time calls and Kafka event streaming for eventual-consistency workflows, "
+            "with Istio service mesh for observability and mTLS.",
+        ],
+        "summary_tag": "microservices architecture design",
+        "exp_slot": "exp1",
+        "recruiter_why": "Microservices is the architectural standard in cloud-native JDs — shows system design capability.",
+    },
+
+    "graphql": {
+        "skill_entry": "GraphQL | Apollo Server | REST-to-GraphQL Migration | Schema Design | Resolvers",
+        "bullets": [
+            "Designed and implemented GraphQL API layer using Apollo Server to replace over-fetching "
+            "REST endpoints, reducing mobile client payload size by 60% and improving "
+            "app performance through declarative data fetching.",
+
+            "Built schema-first GraphQL service with DataLoader batching to solve N+1 queries, "
+            "persisted queries for performance, and depth-limiting + rate limiting for "
+            "production security hardening.",
+        ],
+        "summary_tag": "GraphQL API design",
+        "exp_slot": "exp2",
+        "recruiter_why": "GraphQL is increasingly expected in modern API roles — shows knowledge beyond REST conventions.",
+    },
+
+    # ══ QA / TEST AUTOMATION ════════════════════════════════════════════════
+
+    "selenium": {
+        "skill_entry": "Selenium WebDriver | Page Object Model | TestNG/JUnit | Cross-browser Testing | Allure Reports",
+        "bullets": [
+            "Designed end-to-end test automation framework using Selenium WebDriver with Page "
+            "Object Model (POM), TestNG, and Maven, covering 500+ test cases across 12 modules "
+            "and reducing regression testing cycle from 3 days to 4 hours.",
+
+            "Integrated Selenium grid into Jenkins CI/CD pipeline for parallel cross-browser "
+            "test execution on Chrome, Firefox, and Safari, generating Allure reports with "
+            "screenshot capture on failure and Slack test-result notifications.",
+        ],
+        "summary_tag": "Selenium WebDriver test automation",
+        "exp_slot": "exp1",
+        "recruiter_why": "Selenium is still the #1 UI automation tool listed in QA JDs — presence is table-stakes.",
+    },
+
+    "pytest": {
+        "skill_entry": "pytest | Python Test Automation | Fixtures | Mocking | Test Coverage | pytest-bdd",
+        "bullets": [
+            "Built pytest-based API and unit test suite with fixtures, parameterized tests, "
+            "and monkeypatching, achieving 85% code coverage across core business logic modules, "
+            "integrated into GitHub Actions CI with coverage gate enforcement.",
+
+            "Developed pytest-bdd BDD framework with Gherkin feature files and step definitions "
+            "for acceptance testing, enabling product owners to review test scenarios in "
+            "plain English and reducing ambiguity in acceptance criteria.",
+        ],
+        "summary_tag": "pytest Python test automation",
+        "exp_slot": "exp1",
+        "recruiter_why": "pytest is the dominant Python testing framework — Python-heavy shops list it explicitly.",
+    },
+
+    "api testing": {
+        "skill_entry": "API Testing | Postman | REST Assured | Newman | Contract Testing | Pact",
+        "bullets": [
+            "Developed comprehensive API test collections in Postman covering happy-path, "
+            "boundary, negative, and security test scenarios for REST and GraphQL APIs, "
+            "automated with Newman in CI pipeline running on every pull request.",
+
+            "Implemented consumer-driven contract testing using Pact to prevent integration "
+            "regressions between microservices, catching breaking changes before deployment "
+            "and reducing production incidents by 40% in service-to-service communication.",
+        ],
+        "summary_tag": "API test automation",
+        "exp_slot": "exp1",
+        "recruiter_why": "API testing is now its own specialty — SDET JDs list Postman/REST Assured as required tools.",
+    },
+
+    "performance testing": {
+        "skill_entry": "Performance Testing | JMeter | k6 | Gatling | Load Testing | Stress Testing",
+        "bullets": [
+            "Designed JMeter performance test plans simulating 10,000 concurrent users for "
+            "e-commerce checkout flow, identifying database connection pool exhaustion and "
+            "N+1 query patterns that caused 8-second P95 latency under load.",
+
+            "Implemented k6 load testing as GitHub Actions CI stage for API performance "
+            "regression detection, failing builds when P95 latency exceeded SLO thresholds, "
+            "preventing 3 performance regressions from reaching production.",
+        ],
+        "summary_tag": "performance and load testing",
+        "exp_slot": "exp2",
+        "recruiter_why": "Performance testing expertise is scarce and highly valued — few QA engineers have it.",
+    },
+
+    # ══ MODERN DATA ENGINEERING ══════════════════════════════════════════════
+
+    "dbt": {
+        "skill_entry": "dbt (data build tool) | dbt Cloud | SQL Transformations | Data Lineage | Tests",
+        "bullets": [
+            "Implemented dbt project with 100+ models across staging, intermediate, and mart "
+            "layers, enforcing schema tests, referential integrity checks, and source freshness "
+            "assertions, reducing data quality incidents by 70%.",
+
+            "Migrated legacy stored procedure-based transformations to dbt models with full "
+            "lineage documentation, column-level tests, and CI/CD integration via dbt Cloud "
+            "slim CI, enabling data engineers to iterate without breaking downstream consumers.",
+        ],
+        "summary_tag": "dbt data transformation development",
+        "exp_slot": "exp1",
+        "recruiter_why": "dbt is the hottest data transformation tool — Analytics Engineering roles now require it.",
+    },
+
+    "kafka": {
+        "skill_entry": "Apache Kafka | Kafka Streams | Confluent | Event Streaming | Producer/Consumer",
+        "bullets": [
+            "Designed Kafka-based event streaming architecture to decouple microservices, "
+            "implementing topic partitioning strategy, consumer group management, and "
+            "exactly-once semantics for financial transaction processing.",
+
+            "Built Kafka Streams applications for real-time ETL processing, performing "
+            "stateful aggregations, windowed joins, and anomaly detection on 500K+ events/minute "
+            "with under 100ms end-to-end latency.",
+        ],
+        "summary_tag": "Apache Kafka event streaming",
+        "exp_slot": "exp1",
+        "recruiter_why": "Kafka appears in 60% of Data Engineering and Backend JDs — real-time streaming is now baseline.",
+    },
+
+    "snowflake": {
+        "skill_entry": "Snowflake | Snowpark | Dynamic Tables | Time Travel | Data Sharing | Streams",
+        "bullets": [
+            "Migrated on-premise Oracle data warehouse to Snowflake, designing multi-cluster "
+            "virtual warehouses, row access policies, and column masking for PII compliance, "
+            "reducing query costs by 45% through automated suspension and result caching.",
+
+            "Developed Snowflake Streams and Tasks for change data capture (CDC) pipelines, "
+            "processing incremental updates from transactional systems into analytical tables "
+            "with sub-hourly freshness, replacing daily batch ETL jobs.",
+        ],
+        "summary_tag": "Snowflake cloud data warehouse",
+        "exp_slot": "exp1",
+        "recruiter_why": "Snowflake is the most-listed modern data warehouse tool — its absence is noticed by data engineering recruiters.",
+    },
+
+    "airflow": {
+        "skill_entry": "Apache Airflow | DAGs | Cloud Composer | MWAA | Pipeline Orchestration",
+        "bullets": [
+            "Developed Airflow DAGs to orchestrate multi-step ETL pipelines spanning "
+            "Snowflake, S3, dbt, and Spark, implementing retry logic, SLA monitoring, "
+            "and Slack alerting for failed tasks in production.",
+
+            "Migrated Airflow deployment to Kubernetes using KubernetesExecutor for dynamic "
+            "worker scaling, reducing infrastructure cost by 60% vs. fixed CeleryExecutor cluster "
+            "while enabling per-task resource isolation.",
+        ],
+        "summary_tag": "Apache Airflow pipeline orchestration",
+        "exp_slot": "exp1",
+        "recruiter_why": "Airflow is the de facto orchestration standard — over 80% of data engineering roles list it.",
+    },
 }
 
 # ── Experience block detector ─────────────────────────────────────────────────
@@ -768,6 +1297,91 @@ def _count_experience_blocks(resume_text: str) -> int:
 
 # ── Summary generator ─────────────────────────────────────────────────────────
 
+_DOMAIN_SUMMARY_TEMPLATES: dict[str, tuple[str, str, str]] = {
+    # domain_hint → (default_role_fallback, platform_phrase, value_phrase)
+    "devops": (
+        "DevOps Engineer",
+        "cloud-native infrastructure and CI/CD automation",
+        "delivering scalable, secure, and automated infrastructure solutions",
+    ),
+    "cloud": (
+        "Cloud Engineer",
+        "cloud infrastructure and platform automation",
+        "building reliable, cost-efficient cloud architectures",
+    ),
+    "kubernetes": (
+        "Platform Engineer",
+        "Kubernetes and container orchestration",
+        "enabling high-availability microservices platforms",
+    ),
+    "sre": (
+        "Site Reliability Engineer",
+        "reliability engineering and observability",
+        "driving SLO compliance and incident-response excellence",
+    ),
+    "ai": (
+        "AI/ML Engineer",
+        "LLM applications and machine learning systems",
+        "delivering production-grade GenAI solutions",
+    ),
+    "machine learning": (
+        "Machine Learning Engineer",
+        "machine learning and data science",
+        "translating data into predictive models and intelligent systems",
+    ),
+    "data engineer": (
+        "Data Engineer",
+        "data pipeline and analytics platform development",
+        "building reliable, scalable data infrastructure",
+    ),
+    "security": (
+        "Cybersecurity Engineer",
+        "security engineering and threat mitigation",
+        "hardening systems against evolving threat landscapes",
+    ),
+    "qa": (
+        "QA Automation Engineer",
+        "test automation and quality engineering",
+        "delivering high-quality software through comprehensive test coverage",
+    ),
+    "salesforce": (
+        "Salesforce Developer",
+        "Salesforce platform customization and development",
+        "enabling business processes through Salesforce solutions",
+    ),
+    "sap": (
+        "SAP Consultant",
+        "SAP implementation and customization",
+        "translating business requirements into SAP technical solutions",
+    ),
+    "servicenow": (
+        "ServiceNow Developer",
+        "ServiceNow platform development and ITSM automation",
+        "streamlining IT service management workflows",
+    ),
+    "workday": (
+        "Workday Consultant",
+        "Workday HCM and Finance configuration",
+        "delivering end-to-end Workday implementations",
+    ),
+    "oracle": (
+        "Oracle Technical Consultant",
+        "Oracle Cloud implementations and technical solutions",
+        "translating complex business requirements into scalable Oracle configurations and integrations",
+    ),
+}
+
+
+def _infer_domain_summary(jd_title: str) -> tuple[str, str, str]:
+    """Detect summary template from JD title keywords."""
+    title_l = jd_title.lower()
+    for kw, tmpl in _DOMAIN_SUMMARY_TEMPLATES.items():
+        if kw in title_l:
+            return tmpl
+    # Default to Oracle for backward compat
+    return _DOMAIN_SUMMARY_TEMPLATES["oracle"]
+
+
 def _build_summary(
     jd_title: str,
     max_years: int,
@@ -776,7 +1390,8 @@ def _build_summary(
     gap_breakdown: dict,
 ) -> str:
     """Generate a tailored professional summary for this specific JD."""
-    role = jd_title.strip() if jd_title.strip() else "Oracle Technical Consultant"
+    role_fallback, platform_phrase, value_phrase = _infer_domain_summary(jd_title)
+    role = jd_title.strip() if jd_title.strip() else role_fallback
     years_str = f"{max_years}+" if max_years >= 3 else "several"
 
     # Pick top skills from matched for summary body
@@ -784,14 +1399,13 @@ def _build_summary(
     # Add the most critical missing skills that should be in summary
     top_missing  = gap_breakdown.get("critical", [])[:2] + gap_breakdown.get("required", [])[:2]
     skills_mentioned = list(dict.fromkeys(top_matched + top_missing))[:6]
-    skills_str = ", ".join(skills_mentioned) if skills_mentioned else "Oracle platform implementations"
+    skills_str = ", ".join(skills_mentioned) if skills_mentioned else platform_phrase
 
     return (
-        f"{role} with {years_str} years of hands-on experience delivering end-to-end Oracle Cloud "
-        f"implementations and technical solutions. Expertise spans {skills_str}. "
-        f"Proven track record of translating complex business requirements into scalable Oracle "
-        f"configurations and integrations, working across cross-functional teams from requirements "
-        f"through go-live and hypercare support."
+        f"{role} with {years_str} years of hands-on experience in {platform_phrase}. "
+        f"Expertise spans {skills_str}. "
+        f"Proven track record of {value_phrase}, working across cross-functional teams "
+        f"from requirements through delivery."
     )
 
 
