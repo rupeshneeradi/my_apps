@@ -6,36 +6,33 @@
 {# ── INR Rate Prompt Modal ─────────────────────────────────────────────────── #}
 {% if inr_prompt %}
 {% set p_year, p_month, p_label, p_rate = inr_prompt %}
-<div class="modal fade show d-block" id="inrRateModal" tabindex="-1" style="background:rgba(0,0,0,.5)">
+<div class="modal fade show d-block" id="inrRateModal" tabindex="-1" style="background:rgba(0,0,0,.45)">
   <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content">
+    <div class="modal-content" style="border-radius:14px;border:none;box-shadow:0 8px 32px rgba(0,0,0,.18)">
       <div class="modal-header border-0 pb-1">
-        <h5 class="modal-title"><i class="bi bi-currency-exchange me-2 text-warning"></i>Set INR Rate — {{ p_label }}</h5>
+        <h6 class="modal-title fw-bold"><i class="bi bi-currency-exchange me-2 text-warning"></i>Set INR Rate — {{ p_label }}</h6>
       </div>
-      <div class="modal-body">
+      <div class="modal-body pt-1">
         <p class="text-muted small mb-3">
-          You have INR transactions from <strong>{{ p_label }}</strong>. Enter the average USD per 1 INR rate
-          for that month so your amounts are accurate.<br>
-          <span class="text-muted">Current rate being used: <code>{{ p_rate }}</code>
-          (₹1 = ${{ "%.4f"|format(p_rate) }} → $1 ≈ ₹{{ "%.0f"|format(1/p_rate) }})</span>
+          INR transactions from <strong>{{ p_label }}</strong> exist. Confirm the exchange rate so amounts are accurate.<br>
+          <span class="text-muted">Current: <code>{{ p_rate }}</code> (₹1 = ${{ "%.4f"|format(p_rate) }}, $1 ≈ ₹{{ "%.0f"|format(1/p_rate) }})</span>
         </p>
         <form method="post" action="{{ url_for('inr_rate_confirm') }}" id="inrRateForm">
           <input type="hidden" name="year"  value="{{ p_year }}">
           <input type="hidden" name="month" value="{{ p_month }}">
           <input type="hidden" name="action" value="save">
-          <div class="input-group">
+          <div class="input-group input-group-sm">
             <span class="input-group-text">₹1 =</span>
             <input type="number" name="rate" step="0.000001" min="0.000001"
-                   class="form-control" placeholder="e.g. 0.011696"
-                   value="{{ p_rate }}" required>
+                   class="form-control" placeholder="e.g. 0.011696" value="{{ p_rate }}" required>
             <span class="input-group-text">USD</span>
           </div>
-          <div class="text-muted small mt-1">
-            Tip: Google "<strong>INR USD {{ p_label }}</strong>" → take the average. e.g. $1=₹85.5 → rate = 0.011696
+          <div class="text-muted" style="font-size:.72rem;margin-top:.3rem">
+            Tip: Google "<strong>INR USD {{ p_label }}</strong>" — e.g. $1=₹85.5 → rate = 0.011696
           </div>
         </form>
       </div>
-      <div class="modal-footer border-0 pt-1">
+      <div class="modal-footer border-0 pt-1 gap-2">
         <form method="post" action="{{ url_for('inr_rate_confirm') }}">
           <input type="hidden" name="year"   value="{{ p_year }}">
           <input type="hidden" name="month"  value="{{ p_month }}">
@@ -43,7 +40,7 @@
           <button class="btn btn-sm btn-outline-secondary">Remind me later</button>
         </form>
         <button class="btn btn-sm btn-warning" form="inrRateForm" type="submit">
-          <i class="bi bi-check-lg me-1"></i>Save &amp; Re-convert
+          <i class="bi bi-check-lg me-1"></i>Save & Re-convert
         </button>
       </div>
     </div>
@@ -51,25 +48,24 @@
 </div>
 {% endif %}
 
+{# ── Header row ────────────────────────────────────────────────── #}
 <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
-  <h1 class="page-title mb-0">
-    <i class="bi bi-speedometer2 me-2"></i>{{ period_label }}
-  </h1>
+  <h1 class="page-title mb-0">{{ period_label }}</h1>
   <a href="{{ url_for('upload') }}" class="btn btn-primary btn-sm">
-    <i class="bi bi-cloud-upload me-1"></i>Upload Statement
+    <i class="bi bi-upload me-1"></i>Upload Statement
   </a>
 </div>
 
-{# ── Period Selector ─────────────────────────────────────────── #}
+{# ── Period selector ───────────────────────────────────────────── #}
 <div class="period-bar mb-4">
   <div class="d-flex gap-2 flex-wrap align-items-center">
     <a href="{{ url_for('dashboard', month=current_month, year=current_year) }}"
        class="btn btn-sm {% if month == current_month and year == current_year %}btn-primary{% else %}btn-outline-secondary{% endif %}">
-      <i class="bi bi-calendar-check me-1"></i>This Month
+      This Month
     </a>
     <a href="{{ url_for('dashboard', month=0, year=current_year) }}"
        class="btn btn-sm {% if month == 0 and year == current_year %}btn-primary{% else %}btn-outline-secondary{% endif %}">
-      <i class="bi bi-calendar3 me-1"></i>This Year
+      This Year
     </a>
     {% for y in available_years %}
       {% if y|int != current_year %}
@@ -82,99 +78,93 @@
     <div class="vr mx-1"></div>
     <form method="get" class="d-flex gap-1 align-items-center">
       {% set mnames = ['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'] %}
-      <select name="month" class="form-select form-select-sm" style="width:110px">
+      <select name="month" class="form-select form-select-sm" style="width:108px">
         <option value="0" {% if month==0 %}selected{% endif %}>All months</option>
         {% for m in range(1,13) %}
           <option value="{{ m }}" {% if m==month %}selected{% endif %}>{{ mnames[m] }}</option>
         {% endfor %}
       </select>
-      <input type="number" name="year" value="{{ year }}" class="form-control form-control-sm" style="width:80px" min="2000" max="2099">
+      <input type="number" name="year" value="{{ year }}" class="form-control form-control-sm" style="width:76px" min="2000" max="2099">
       <button class="btn btn-sm btn-outline-primary" type="submit">Go</button>
     </form>
   </div>
 </div>
 
-{# ── 5 Stat Cards ────────────────────────────────────────────── #}
+{# ── Stat cards ────────────────────────────────────────────────── #}
 {% set charges  = period_totals.debits %}
 {% set payments = period_totals.payments %}
 {% set refunds  = period_totals.refunds %}
 {% set wasted   = period_totals.wasted %}
 
-<div class="row g-3 mb-3">
+<div class="row g-3 mb-4">
 
-  {# ── MoM delta macro ────────────────────────────────────────── #}
-  {# lower is better for charges/wasted, higher is better for payments #}
-  {% macro delta_badge(current, prev, lower_is_better=true) %}
-    {% if prev and prev > 0 %}
-      {% set pct = ((current - prev) / prev * 100) %}
-      {% if pct > 0 %}
-        {% set color = 'text-danger' if lower_is_better else 'text-success' %}
-        <span class="small {{ color }}"><i class="bi bi-arrow-up-short"></i>{{ "%.1f"|format(pct) }}% vs prior</span>
-      {% elif pct < 0 %}
-        {% set color = 'text-success' if lower_is_better else 'text-danger' %}
-        <span class="small {{ color }}"><i class="bi bi-arrow-down-short"></i>{{ "%.1f"|format(pct|abs) }}% vs prior</span>
-      {% else %}
-        <span class="small text-muted">No change vs prior</span>
-      {% endif %}
-    {% endif %}
-  {% endmacro %}
-
-  <div class="col-6 col-md-4">
+  <div class="col-6 col-md-3">
     <a href="{{ url_for('transactions', month=month, year=year, txn_type='debit') }}" class="text-decoration-none">
-      <div class="stat-card h-100" style="border-left:4px solid #ef4444;cursor:pointer">
-        <div class="stat-label"><i class="bi bi-credit-card me-1"></i>Charges</div>
+      <div class="stat-card h-100" style="border-top:3px solid #ef4444">
+        <div class="stat-label">Charges</div>
         <div class="stat-value">${{ "%.2f"|format(charges) }}</div>
-        <div class="stat-sub">{{ delta_badge(charges, prev_totals.debits, lower_is_better=true) }}</div>
-      </div>
-    </a>
-  </div>
-
-  <div class="col-6 col-md-4">
-    <a href="{{ url_for('transactions', month=month, year=year, category='Payments') }}" class="text-decoration-none">
-      <div class="stat-card h-100" style="border-left:4px solid #22c55e;cursor:pointer">
-        <div class="stat-label"><i class="bi bi-arrow-return-left me-1"></i>Payments</div>
-        <div class="stat-value text-success">${{ "%.2f"|format(payments) }}</div>
-        <div class="stat-sub">{{ delta_badge(payments, prev_totals.payments, lower_is_better=false) }}</div>
-      </div>
-    </a>
-  </div>
-
-  <div class="col-6 col-md-4">
-    <a href="{{ url_for('transactions', month=month, year=year, category='Refunds') }}" class="text-decoration-none">
-      <div class="stat-card h-100" style="border-left:4px solid #06b6d4;cursor:pointer">
-        <div class="stat-label"><i class="bi bi-arrow-clockwise me-1"></i>Refunds</div>
-        <div class="stat-value text-info">${{ "%.2f"|format(refunds) }}</div>
-        <div class="stat-sub text-primary small">View all →</div>
-      </div>
-    </a>
-  </div>
-
-  <div class="col-6 col-md-4">
-    <a href="{{ url_for('transactions', month=month, year=year, is_wasted=1) }}" class="text-decoration-none">
-      <div class="stat-card wasted h-100" style="cursor:pointer">
-        <div class="stat-label"><i class="bi bi-exclamation-triangle me-1"></i>Wasted</div>
-        <div class="stat-value">${{ "%.2f"|format(wasted) }}</div>
         <div class="stat-sub">
-          {% if charges > 0 %}{{ "%.1f"|format(wasted/charges*100) }}% of charges &nbsp;{% endif %}
-          {{ delta_badge(wasted, prev_totals.wasted, lower_is_better=true) }}
+          {%- if prev_totals and prev_totals.debits > 0 -%}
+            {%- set d = ((charges - prev_totals.debits) / prev_totals.debits * 100) -%}
+            <span class="{% if d > 0 %}text-danger{% else %}text-success{% endif %}">
+              {% if d > 0 %}▲{% else %}▼{% endif %} {{ "%.1f"|format(d|abs) }}% vs prior
+            </span>
+          {%- else -%}&nbsp;{%- endif -%}
         </div>
       </div>
     </a>
   </div>
 
+  <div class="col-6 col-md-3">
+    <a href="{{ url_for('transactions', month=month, year=year, is_wasted=1) }}" class="text-decoration-none">
+      <div class="stat-card wasted h-100">
+        <div class="stat-label">Wasted</div>
+        <div class="stat-value">${{ "%.2f"|format(wasted) }}</div>
+        <div class="stat-sub">
+          {%- if charges > 0 -%}{{ "%.1f"|format(wasted/charges*100) }}% of charges{%- endif -%}
+          {%- if prev_totals and prev_totals.wasted > 0 -%}
+            {%- set d = ((wasted - prev_totals.wasted) / prev_totals.wasted * 100) -%}
+            <span class="ms-1 {% if d > 0 %}text-danger{% else %}text-success{% endif %}">
+              ({% if d > 0 %}▲{% else %}▼{% endif %}{{ "%.0f"|format(d|abs) }}%)
+            </span>
+          {%- endif -%}
+        </div>
+      </div>
+    </a>
+  </div>
+
+  <div class="col-6 col-md-3">
+    <a href="{{ url_for('transactions', month=month, year=year, category='Payments') }}" class="text-decoration-none">
+      <div class="stat-card h-100" style="border-top:3px solid #16a34a">
+        <div class="stat-label">Payments</div>
+        <div class="stat-value text-success">${{ "%.2f"|format(payments) }}</div>
+        <div class="stat-sub">&nbsp;</div>
+      </div>
+    </a>
+  </div>
+
+  <div class="col-6 col-md-3">
+    <a href="{{ url_for('transactions', month=month, year=year, category='Refunds') }}" class="text-decoration-none">
+      <div class="stat-card h-100" style="border-top:3px solid #0ea5e9">
+        <div class="stat-label">Refunds</div>
+        <div class="stat-value text-info">${{ "%.2f"|format(refunds) }}</div>
+        <div class="stat-sub">&nbsp;</div>
+      </div>
+    </a>
+  </div>
+
 </div>
 
-{# ── Info banners ─────────────────────────────────────────────── #}
 {% if period_totals.loans > 0 %}
 <div class="alert alert-warning py-2 mb-3 small">
   <i class="bi bi-cash-stack me-1"></i>
-  <strong>Loan/Transfer:</strong> ${{ "%.2f"|format(period_totals.loans) }} detected this period.
+  <strong>Loan / Transfer:</strong> ${{ "%.2f"|format(period_totals.loans) }} detected this period.
 </div>
 {% endif %}
 
+{# ── Account + Category breakdown ──────────────────────────────── #}
 <div class="row g-4 mb-4">
 
-  {# ── Spend by Account ──────────────────────────────────────── #}
   <div class="col-lg-5">
     <div class="card-panel h-100">
       <div class="panel-header"><i class="bi bi-credit-card me-2"></i>Spend by Account</div>
@@ -208,9 +198,6 @@
               <td class="text-end text-success">
                 {% if a.credits > 0 %}
                   <small>${{ "%.2f"|format(a.credits) }}</small>
-                  {% if a.has_inr and a.inr_credits > 0 %}
-                  <br><small class="text-muted">₹{{ "{:,.0f}".format(a.inr_credits) }}</small>
-                  {% endif %}
                 {% else %}<span class="text-muted">—</span>{% endif %}
               </td>
               <td class="text-end fw-bold">${{ "%.2f"|format(a_net) }}</td>
@@ -220,7 +207,7 @@
           </tbody>
           <tfoot>
             <tr class="table-active fw-bold">
-              <td>Total (USD)</td>
+              <td>Total</td>
               <td class="text-end">${{ "%.2f"|format(charges) }}</td>
               <td class="text-end text-success">${{ "%.2f"|format(period_totals.credits) }}</td>
               <td class="text-end">${{ "%.2f"|format(charges - period_totals.credits) }}</td>
@@ -230,7 +217,7 @@
       </div>
       {% else %}
       <div class="empty-state">
-        <i class="bi bi-inbox display-6 d-block mb-2 text-muted"></i>
+        <i class="bi bi-inbox display-6 d-block mb-2"></i>
         No data for this period.
         <a href="{{ url_for('upload') }}" class="d-block mt-2 btn btn-sm btn-primary">Upload Statement</a>
       </div>
@@ -238,11 +225,10 @@
     </div>
   </div>
 
-  {# ── Category Breakdown ────────────────────────────────────── #}
   <div class="col-lg-7">
     <div class="card-panel h-100">
       <div class="panel-header">
-        <i class="bi bi-pie-chart me-2"></i>Charges by Category
+        <i class="bi bi-pie-chart me-2"></i>Spending by Category
         <small class="text-muted fw-normal ms-1">— purchases only</small>
       </div>
       {% if category_breakdown %}
@@ -255,21 +241,17 @@
             <table class="table table-sm mb-0">
               <tbody>
                 {% for c in category_breakdown %}
-                <tr {% if c.category == 'Wasted' %}class="wasted-row"{% endif %}>
+                <tr>
                   <td>
-                    {% if c.category == 'Wasted' %}
-                      <i class="bi bi-exclamation-triangle text-danger me-1"></i>
-                    {% else %}
-                      <i class="bi bi-circle-fill me-1" style="font-size:.45rem;color:#3b82f6;vertical-align:middle"></i>
-                    {% endif %}
+                    <i class="bi bi-circle-fill me-1" style="font-size:.4rem;color:#3b82f6;vertical-align:middle"></i>
                     <a href="{{ url_for('transactions', month=month, year=year, category=c.category) }}"
                        class="text-decoration-none text-dark">{{ c.category }}</a>
                     <small class="text-muted">({{ c.count }})</small>
                   </td>
-                  <td class="text-end fw-semibold">
+                  <td class="text-end fw-semibold text-nowrap">
                     ${{ "%.2f"|format(c.total) }}
                     {% if charges > 0 %}
-                    <br><small class="text-muted">{{ "%.0f"|format(c.total/charges*100) }}%</small>
+                    <small class="text-muted"> {{ "%.0f"|format(c.total/charges*100) }}%</small>
                     {% endif %}
                   </td>
                 </tr>
@@ -284,24 +266,25 @@
       {% endif %}
     </div>
   </div>
+
 </div>
 
-{# ── Monthly Trend ──────────────────────────────────────────── #}
+{# ── Monthly trend chart ────────────────────────────────────────── #}
 <div class="card-panel mb-4">
   <div class="panel-header d-flex justify-content-between align-items-center">
     <span><i class="bi bi-bar-chart-line me-2"></i>Monthly Charges — {{ year }}</span>
-    <small class="text-muted fw-normal">Charges vs Wasted spend</small>
+    <small class="text-muted fw-normal">Charges vs Wasted</small>
   </div>
-  <canvas id="monthlyChart" height="110"></canvas>
+  <canvas id="monthlyChart" height="100"></canvas>
 </div>
 
-{# ── Recent Transactions ──────────────────────────────────────── #}
+{# ── Recent transactions ────────────────────────────────────────── #}
 {% if recent_txns %}
-<div class="card-panel">
+<div class="card-panel mb-4">
   <div class="panel-header d-flex justify-content-between align-items-center">
     <span><i class="bi bi-clock-history me-2"></i>Recent Transactions</span>
     <a href="{{ url_for('transactions', month=month, year=year) }}" class="btn btn-sm btn-outline-secondary">
-      View all <i class="bi bi-arrow-right"></i>
+      View all <i class="bi bi-arrow-right ms-1"></i>
     </a>
   </div>
   <div class="table-responsive">
@@ -312,23 +295,18 @@
       <tbody>
         {% for t in recent_txns %}
         <tr {% if t.is_wasted %}class="wasted-row"{% endif %}>
-          <td class="text-nowrap">{{ t.date }}</td>
+          <td class="text-nowrap text-muted">{{ t.date }}</td>
           <td><small class="text-muted">{{ t.account_name }}</small></td>
-          <td>{{ t.description[:50] }}{% if t.description|length > 50 %}…{% endif %}</td>
+          <td>{{ t.description[:48] }}{% if t.description|length > 48 %}…{% endif %}</td>
           <td>
-            {% if t.is_wasted %}
-              <span class="badge bg-danger">Wasted</span>
-            {% elif t.category == 'Payments' %}
-              <span class="badge bg-success">Payment</span>
-            {% elif t.category == 'Refunds' %}
-              <span class="badge bg-info text-dark">Refund</span>
-            {% elif t.txn_type == 'credit' %}
-              <span class="badge bg-success">Payment/Refund</span>
+            {% if t.txn_type == 'credit' %}
+              <span class="badge bg-success bg-opacity-75">{{ t.category }}</span>
             {% else %}
               <span class="badge-cat">{{ t.category }}</span>
+              {% if t.is_wasted %}<span class="badge-wasted ms-1">Wasted</span>{% endif %}
             {% endif %}
           </td>
-          <td class="text-end fw-semibold">
+          <td class="text-end fw-semibold text-nowrap">
             {% if t.txn_type == 'credit' %}
               <span class="text-success">+${{ "%.2f"|format(t.amount) }}</span>
             {% else %}
@@ -346,16 +324,16 @@
 </div>
 {% endif %}
 
-{# ── Manage Accounts ───────────────────────────────────────────── #}
-<div class="card-panel mt-4">
-  <div class="panel-header d-flex justify-content-between align-items-center">
-    <span><i class="bi bi-bank me-2"></i>Manage Accounts</span>
+{# ── Manage accounts (collapsed) ──────────────────────────────────── #}
+<div class="card-panel">
+  <div class="panel-header d-flex justify-content-between align-items-center mb-0">
+    <span><i class="bi bi-bank me-2"></i>Accounts</span>
     <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="collapse" data-bs-target="#manageAccounts">
-      <i class="bi bi-gear me-1"></i>Manage
+      Manage
     </button>
   </div>
-  <div class="collapse" id="manageAccounts">
-    <form method="post" action="{{ url_for('add_account') }}" class="mb-3 p-2 bg-light rounded">
+  <div class="collapse mt-3" id="manageAccounts">
+    <form method="post" action="{{ url_for('add_account') }}" class="mb-3 p-3 bg-light rounded">
       <div class="row g-2 align-items-end">
         <div class="col-5">
           <input type="text" name="name" class="form-control form-control-sm" placeholder="Account name" required>
@@ -375,7 +353,7 @@
     {% if accounts %}
     <ul class="list-group list-group-flush">
       {% for a in accounts %}
-      <li class="list-group-item d-flex justify-content-between align-items-center py-2 px-2">
+      <li class="list-group-item d-flex justify-content-between align-items-center py-2 px-1">
         <span>
           <span class="badge-acct {{ a.type }} me-2">{{ a.type }}</span>
           {{ a.name }}
