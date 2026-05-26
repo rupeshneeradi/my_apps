@@ -126,12 +126,34 @@ def _is_alive(pid: int | None) -> bool:
     except OSError:
         return False
 
+def _port_pids(port: int) -> list[int]:
+    """Return all PIDs listening on the given TCP port (handles werkzeug reloader)."""
+    try:
+        out = subprocess.check_output(
+            ["lsof", "-ti", f"tcp:{port}"], stderr=subprocess.DEVNULL
+        ).decode().strip()
+        return [int(p) for p in out.splitlines() if p.strip().isdigit()]
+    except Exception:
+        return []
+
 def _status(name: str) -> tuple[bool, int | None]:
-    pid = _read_pid(name)
+    """Check if a web app is running — via PID file first, then port scan fallback."""
+    app  = APPS[name]
+    pid  = _read_pid(name)
     alive = _is_alive(pid)
-    if not alive and _pid_path(name).exists():
-        _pid_path(name).unlink(missing_ok=True)
+
+    if not alive:
+        # Clean up stale PID file
+        if _pid_path(name).exists():
+            _pid_path(name).unlink(missing_ok=True)
         pid = None
+        # Fallback: detect processes started outside manage.py by scanning the port
+        if app.get("port"):
+            pids = _port_pids(app["port"])
+            if pids:
+                pid   = pids[0]
+                alive = True
+
     return alive, pid
 
 # ── Web app lifecycle ─────────────────────────────────────────────────────────
@@ -141,6 +163,9 @@ def start_web(name: str) -> bool:
     alive, pid = _status(name)
     if alive:
         info(f"{app['label']}  already running  (PID {pid})  →  {app['url']}")
+        # Write PID file if it was missing (app started outside manage.py)
+        if pid and not _pid_path(name).exists():
+            _pid_path(name).write_text(str(pid))
         return True
 
     log = _log_path(name)
@@ -185,14 +210,28 @@ def stop_web(name: str) -> bool:
         info(f"{app['label']}  not running")
         return True
 
-    os.kill(pid, signal.SIGTERM)
+    # Collect ALL pids on the port (werkzeug reloader spawns a child)
+    port_pids = _port_pids(app["port"]) if app.get("port") else []
+    all_pids  = list({pid} | set(port_pids)) if pid else port_pids
+
+    for p in all_pids:
+        try:
+            os.kill(p, signal.SIGTERM)
+        except ProcessLookupError:
+            pass
+
     for _ in range(30):
         time.sleep(0.2)
-        if not _is_alive(pid):
+        if not any(_is_alive(p) for p in all_pids):
             break
-    if _is_alive(pid):
-        os.kill(pid, signal.SIGKILL)
-        time.sleep(0.5)
+
+    for p in all_pids:
+        if _is_alive(p):
+            try:
+                os.kill(p, signal.SIGKILL)
+            except ProcessLookupError:
+                pass
+    time.sleep(0.3)
 
     _pid_path(name).unlink(missing_ok=True)
     ok(f"{app['label']}  stopped  (was PID {pid})")
