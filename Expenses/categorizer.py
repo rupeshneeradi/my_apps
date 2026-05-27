@@ -513,7 +513,7 @@ def _pdf_text_to_transactions(filepath: str, account_id: int, statement_file: st
             txn_month = int(date[5:7])
             txn_year  = int(date[:4])
             if currency == 'INR':
-                inr_rate    = db.get_inr_rate_for_month(txn_year, txn_month)
+                inr_rate    = db.get_inr_rate_for_date(date)
                 usd_amount  = round(amount * inr_rate, 4)
                 orig_amount = amount
                 orig_curr   = 'INR'
@@ -621,11 +621,9 @@ def _pdf_text_to_transactions(filepath: str, account_id: int, statement_file: st
         if any(x in dl for x in SKIP_BOFA_DESC):
             continue
 
-        # ── INR → USD conversion using rate for that month ───────────────────
-        txn_month = int(date[5:7])
-        txn_year  = int(date[:4])
+        # ── INR → USD conversion using historical rate for that date ────────
         if currency == 'INR':
-            inr_rate    = db.get_inr_rate_for_month(txn_year, txn_month)
+            inr_rate    = db.get_inr_rate_for_date(date)
             usd_amount  = round(amount * inr_rate, 4)
             orig_amount = amount
             orig_curr   = 'INR'
@@ -759,11 +757,9 @@ def _df_to_transactions(df, account_id: int, statement_file: str,
             if amount == 0:
                 continue
 
-            # Convert to USD using the monthly rate for that transaction's month
+            # Convert to USD using historical rate for that exact date
             if currency == 'INR':
-                txn_m = int(date[5:7])
-                txn_y = int(date[:4])
-                inr_rate     = db.get_inr_rate_for_month(txn_y, txn_m)
+                inr_rate     = db.get_inr_rate_for_date(date)
                 usd_amount   = round(amount * inr_rate, 4)
                 orig_amount  = amount
                 orig_currency = 'INR'

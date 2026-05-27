@@ -807,17 +807,80 @@ def delete_wasted_keyword(kw_id):
 
 # ── INR rate helpers ──────────────────────────────────────────────────────────
 
+# In-memory cache: date string → rate  (cleared on restart, avoids repeat API calls)
+_inr_rate_cache: dict[str, float] = {}
+
+
+def fetch_historical_rate(date_str: str) -> float | None:
+    """Fetch the INR→USD rate for a specific date from frankfurter.app.
+
+    Lookup order:
+      1. In-memory cache (fast, within same process)
+      2. Settings DB   (persists across restarts, key = inr_usd_rate_date_YYYY-MM-DD)
+      3. frankfurter.app API (free, no API key, nearest trading day)
+    Returns None if the API is unreachable.
+    """
+    global _inr_rate_cache
+
+    # 1. Memory cache
+    if date_str in _inr_rate_cache:
+        return _inr_rate_cache[date_str]
+
+    # 2. Persisted DB cache
+    db_key = f'inr_usd_rate_date_{date_str}'
+    stored = get_setting(db_key)
+    if stored:
+        rate = float(stored)
+        _inr_rate_cache[date_str] = rate
+        return rate
+
+    # 3. Live API fetch
+    try:
+        import urllib.request, json
+        url = f'https://api.frankfurter.app/{date_str}?from=INR&to=USD'
+        req = urllib.request.Request(url, headers={'User-Agent': 'ExpensesTracker/1.0'})
+        with urllib.request.urlopen(req, timeout=5) as resp:
+            data = json.loads(resp.read())
+        rate = float(data['rates']['USD'])
+        # Persist to DB and memory cache
+        set_setting(db_key, str(rate))
+        _inr_rate_cache[date_str] = rate
+        return rate
+    except Exception:
+        return None
+
+
+def get_inr_rate_for_date(date_str: str) -> float:
+    """Return the best INR→USD rate for a transaction date.
+
+    Priority:
+      1. Historical rate fetched/cached for that exact date
+      2. Monthly override stored in Settings
+      3. Global fallback rate
+    """
+    rate = fetch_historical_rate(date_str)
+    if rate:
+        return rate
+    # Fall back to monthly override → global
+    try:
+        year  = int(date_str[:4])
+        month = int(date_str[5:7])
+        return get_inr_rate_for_month(year, month)
+    except Exception:
+        return get_inr_rate()
+
+
 def reapply_inr_rates_for_month(year: int, month: int) -> int:
-    """Re-convert all INR transactions in a month using the stored monthly rate."""
-    rate = get_inr_rate_for_month(year, month)
+    """Re-convert all INR transactions in a month using per-date historical rates."""
     conn = get_conn()
     rows = conn.execute(
-        """SELECT id, orig_amount FROM transactions
+        """SELECT id, date, orig_amount FROM transactions
            WHERE orig_currency='INR'
            AND strftime('%Y', date)=? AND strftime('%m', date)=?""",
         (str(year), f"{month:02d}")
     ).fetchall()
     for row in rows:
+        rate    = get_inr_rate_for_date(row['date'])
         new_usd = round(row['orig_amount'] * rate, 4)
         conn.execute("UPDATE transactions SET amount=? WHERE id=?", (new_usd, row['id']))
     conn.commit()
@@ -826,17 +889,22 @@ def reapply_inr_rates_for_month(year: int, month: int) -> int:
 
 
 def reapply_all_inr_rates() -> int:
-    """Re-convert every INR transaction using the correct monthly rate."""
+    """Re-convert every INR transaction using per-date historical rates."""
     conn = get_conn()
-    months = conn.execute(
-        """SELECT DISTINCT strftime('%Y', date) as y, strftime('%m', date) as m
-           FROM transactions WHERE orig_currency='INR'"""
+    rows = conn.execute(
+        "SELECT id, date, orig_amount FROM transactions WHERE orig_currency='INR'"
     ).fetchall()
     conn.close()
-    total = 0
-    for row in months:
-        total += reapply_inr_rates_for_month(int(row['y']), int(row['m']))
-    return total
+    updated = 0
+    for row in rows:
+        rate    = get_inr_rate_for_date(row['date'])
+        new_usd = round(row['orig_amount'] * rate, 4)
+        c = get_conn()
+        c.execute("UPDATE transactions SET amount=? WHERE id=?", (new_usd, row['id']))
+        c.commit()
+        c.close()
+        updated += 1
+    return updated
 
 
 def get_inr_prompt_month():

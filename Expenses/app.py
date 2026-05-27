@@ -462,6 +462,21 @@ def inr_rate_confirm():
     return redirect(url_for('dashboard'))
 
 
+# ── Refetch historical INR rates ──────────────────────────────────────────────
+
+@app.route('/settings/refetch-inr-rates', methods=['POST'])
+def refetch_inr_rates():
+    """Re-fetch the actual historical INR→USD rate for every INR transaction date
+    and re-convert amounts. Uses frankfurter.app (free, no API key)."""
+    try:
+        changed = db.reapply_all_inr_rates()
+        flash(f'Historical rates applied — {changed} INR transaction(s) re-converted '
+              f'using the actual exchange rate for each date.', 'success')
+    except Exception as e:
+        flash(f'Rate fetch failed: {e}', 'danger')
+    return redirect(url_for('settings'))
+
+
 # ── API (JSON) ────────────────────────────────────────────────────────────────
 
 @app.route('/api/categories')

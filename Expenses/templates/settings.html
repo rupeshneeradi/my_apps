@@ -36,6 +36,22 @@
       </form>
     </div>
 
+    <!-- Refetch historical rates -->
+    <div class="card-panel mt-3">
+      <div class="panel-header"><i class="bi bi-cloud-download me-2"></i>Historical INR Rates</div>
+      <p class="text-muted small mb-3">
+        Fetch the actual INR→USD exchange rate for each transaction's date from
+        <strong>frankfurter.app</strong> and re-convert all INR amounts.
+        Rates are cached locally so future imports are instant.
+      </p>
+      <form method="post" action="{{ url_for('refetch_inr_rates') }}"
+            onsubmit="return confirm('Re-convert all INR transactions using their actual date rate? This may take a moment.')">
+        <button class="btn btn-sm btn-outline-primary" type="submit">
+          <i class="bi bi-arrow-repeat me-1"></i>Fetch & Apply Historical Rates
+        </button>
+      </form>
+    </div>
+
     <!-- About -->
     <div class="card-panel mt-3">
       <div class="panel-header"><i class="bi bi-info-circle me-2"></i>About</div>
