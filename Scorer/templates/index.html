@@ -101,6 +101,22 @@ details[open] .arr{transform:rotate(180deg)}
 .sc-num.hot{color:var(--hot)}.sc-num.good{color:var(--good)}.sc-num.ok{color:var(--ok)}.sc-num.skip{color:var(--skip)}.sc-num.q{color:var(--purple)}.sc-num.t{color:var(--teal)}
 .sc-lbl{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-top:2px;text-align:center}
 .sc-sep{width:1px;background:var(--bdr);align-self:stretch}
+.eval-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.eval-card{background:var(--card2);border:1px solid var(--bdr);border-radius:8px;padding:8px 9px;min-height:70px}
+.eval-top{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:5px}
+.eval-label{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)}
+.eval-score{font-size:16px;font-weight:800}
+.eval-reason{font-size:11px;color:var(--muted);line-height:1.35}
+.evidence-list{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.evidence-item{background:rgba(100,112,243,.06);border:1px solid rgba(100,112,243,.18);border-radius:8px;padding:8px 10px}
+.evidence-kw{font-size:11px;font-weight:800;color:#7c8dff;text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px}
+.evidence-line{font-size:12px;color:var(--text);line-height:1.45}
+.truth-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.truth-panel{background:var(--card);border:1px solid var(--bdr);border-radius:8px;padding:10px 11px}
+.truth-panel h4{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px}
+.truth-panel.safe h4{color:var(--hot)}.truth-panel.gap h4{color:#f87171}
+@media(max-width:1100px){.eval-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:720px){.eval-grid,.evidence-list,.truth-grid{grid-template-columns:1fr}}
 .chips{display:flex;gap:5px;flex-wrap:wrap;padding:7px 0 2px}
 .chip{font-size:11px;font-weight:600;padding:2px 8px;border-radius:11px}
 .chip.m{background:rgba(34,197,94,.1);color:var(--hot)}.chip.g{background:rgba(239,68,68,.1);color:#f87171}
@@ -903,9 +919,10 @@ function renderScorer(data){
   const cnt={};
   data.results.forEach(r=>{cnt[r.verdict]=(cnt[r.verdict]||0)+1;});
   const titleStr=data.jd_title?`<strong>${esc(data.jd_title)}</strong>`:"Results";
+  const domain=data.jd_domain?`<span class="chip s">Domain: ${esc(data.jd_domain.label)} · ${data.jd_domain.confidence}%</span>`:"";
   let html=`<div class="sumbar">
     <div class="st">${titleStr} <em>— ${data.total} resume${data.total!==1?"s":""} analysed</em></div>
-    <div class="pills">${Object.entries(cnt).map(([v,n])=>`<span class="pill ${vcls(v)}">${esc(v)} ${n}</span>`).join("")}</div>
+    <div class="pills">${domain}${Object.entries(cnt).map(([v,n])=>`<span class="pill ${vcls(v)}">${esc(v)} ${n}</span>`).join("")}</div>
   </div>`;
 
   data.results.forEach((r,i)=>{
@@ -917,6 +934,7 @@ function renderScorer(data){
     const sig=r.signals||{};
     const gb=r.gap_breakdown||{};
     const re=r.real_examples||{};
+    const ev=r.evaluation||{};
     const safeId=r.resume.replace(/[^a-z0-9]/gi,"_");
 
     const scoreRow=`<div class="score-row">
@@ -931,6 +949,7 @@ function renderScorer(data){
 
     const strHtml=(r.strengths||[]).map(s=>`<li>${esc(s)}</li>`).join("");
     const rfHtml=(r.red_flags||[]).length?(r.red_flags||[]).map(f=>`<li>${esc(f)}</li>`).join(""):"<li>No significant red flags</li>";
+    const evalHtml=renderEvaluation(ev);
 
     let writerHtml="";
     const hasContent=(rc.skills_to_add||[]).length+(rc.exp1_bullets||[]).length+(rc.exp2_bullets||[]).length>0;
@@ -997,6 +1016,7 @@ function renderScorer(data){
           <div class="panel str"><div class="panel-h">✓ Strengths</div><ul>${strHtml}</ul></div>
           <div class="panel rf"><div class="panel-h">⚠ Red Flags</div><ul>${rfHtml}</ul></div>
         </div>
+        ${evalHtml}
         ${writerHtml}
         <div class="kw-row">
           <div class="kws miss"><div class="kws-h">✕ Gap Keywords (${(r.missing||[]).length})</div><div class="tags">${gapTagsAll}</div></div>
@@ -1006,6 +1026,65 @@ function renderScorer(data){
     </details>`;
   });
   document.getElementById("panel").innerHTML=html;
+}
+
+function scoreClass(score){
+  return score>=75?"hot":score>=55?"good":score>=40?"ok":"skip";
+}
+function renderEvaluation(ev){
+  if(!ev.categories)return"";
+  const cats=ev.categories.map(c=>{
+    const cls=scoreClass(c.score||0);
+    return `<div class="eval-card">
+      <div class="eval-top">
+        <div class="eval-label">${esc(c.label)} · ${c.weight}%</div>
+        <div class="eval-score ${cls}" style="color:var(--${cls})">${c.score||0}</div>
+      </div>
+      <div class="eval-reason">${esc(c.reason||"")}</div>
+      <div class="eval-reason" style="margin-top:4px">Confidence: ${esc(c.confidence||"medium")}</div>
+    </div>`;
+  }).join("");
+
+  const evidence=Object.entries(ev.evidence||{}).slice(0,6).map(([kw,v])=>{
+    const hit=((v.hits||[])[0]||{});
+    return `<div class="evidence-item">
+      <div class="evidence-kw">${esc(kw)} · ${esc(v.level||"matched")}</div>
+      <div class="evidence-line">${esc(hit.line||"Matched in resume text")}</div>
+    </div>`;
+  }).join("")||`<div class="evidence-item"><div class="evidence-line" style="color:var(--muted)">No evidence-backed keyword matches found.</div></div>`;
+
+  const safe=(ev.safe_to_add||[]).slice(0,8).map(x=>`<span class="tm" title="Related evidence: ${(x.related_evidence||[]).map(esc).join(", ")}">${esc(x.keyword)}</span>`).join("")||
+    `<span style="color:var(--muted);font-size:12px">Nothing to add safely from existing evidence.</span>`;
+  const gaps=(ev.learning_gaps||[]).slice(0,8).map(x=>`<span class="tg">${esc(x.keyword)}</span>`).join("")||
+    `<span style="color:var(--muted);font-size:12px">No unsupported learning gaps detected.</span>`;
+  const d=ev.domains||{};
+  const jd=(d.jd||{}), resume=(d.resume||{});
+  const summary=ev.verification_summary||{};
+
+  return `<div class="writer-box">
+    <div class="writer-head">
+      <div class="writer-head-title">ChatGPT-Style Score Rubric · Overall ${ev.overall_score||0}</div>
+      <div class="writer-head-sub">${esc(resume.label||"Resume")} → ${esc(jd.label||"JD")} · Fit ${d.fit_score??"—"}</div>
+    </div>
+    <div class="placement-block">
+      <div class="eval-grid">${cats}</div>
+      <div class="why-tip" style="margin-top:9px">
+        Required matched: ${summary.required_matched||0}/${summary.required_total||0} ·
+        Preferred matched: ${summary.preferred_matched||0}/${summary.preferred_total||0} ·
+        Evidence-backed keywords: ${summary.evidence_backed_keywords||0}/${summary.total_scored_keywords||0}
+      </div>
+    </div>
+    <div class="placement-block">
+      <div class="panel-h" style="color:#7c8dff">Evidence Found In Resume</div>
+      <div class="evidence-list">${evidence}</div>
+    </div>
+    <div class="placement-block">
+      <div class="truth-grid">
+        <div class="truth-panel safe"><h4>Safe To Mention If True</h4><div class="tags">${safe}</div></div>
+        <div class="truth-panel gap"><h4>Do Not Claim Without Real Experience</h4><div class="tags">${gaps}</div></div>
+      </div>
+    </div>
+  </div>`;
 }
 
 function placementBlock(tagClass,label,instr,inner){

@@ -13,12 +13,15 @@ import io
 from ats_scorer import score_resume
 from drive_resumes import load_resumes
 from analyzer import analyze
+from evaluator import evaluate_resume_fit, verdict_from_score
 from writer import generate_resume_content
 from scraper import fetch_real_examples
 from docx_report import generate_report_docx
 from tracker import init_db, add_application, list_applications, update_application, delete_application, get_stats
 from gap_analyzer import analyze_gap, AVAILABLE_ROLES
 from builder_docx import generate_resume_docx
+from role_classifier import classify, domain_label
+from semantic_scorer import SUPPORTED_EXTERNAL_DOMAINS, score_with_domain_bank
 from jobs_sync import (
     sync_opt_pipeline, sync_portal_pipeline,
     list_pipeline_jobs, get_pipeline_job, update_pipeline_status, pipeline_stats,
@@ -171,10 +174,42 @@ def score():
             return jsonify({"error": f"Resume '{resume_name}' not found."}), 404
         resumes = {resume_name: resumes[resume_name]}
 
+    jd_domain, jd_domain_confidence, _ = classify((jd_title + "\n" + jd_text).strip())
+
     results = []
     for fname, rtext in resumes.items():
-        ats_val, matched, missing = score_resume(rtext, jd_text, jd_title=jd_title)
+        if jd_domain in SUPPORTED_EXTERNAL_DOMAINS:
+            ats_val, matched, missing = score_resume(
+                rtext, jd_text, jd_title=jd_title, domain=jd_domain
+            )
+        else:
+            ats_val, matched, missing = score_with_domain_bank(
+                rtext, jd_text, jd_title, jd_domain
+            )
         analysis       = analyze(rtext, fname, jd_text, jd_title, ats_val, matched, missing)
+        chatgpt_eval   = evaluate_resume_fit(
+            rtext,
+            jd_text,
+            jd_title,
+            ats_val,
+            analysis["quality_score"],
+            matched,
+            missing,
+            analysis["signals"]["sections"],
+        )
+        required_category = next(
+            (c for c in chatgpt_eval["categories"] if c["key"] == "required_skills"),
+            {"score": 0},
+        )
+        verdict, vcolor, interview = verdict_from_score(
+            chatgpt_eval["overall_score"], required_category["score"]
+        )
+        analysis["chatgpt_score"] = chatgpt_eval["overall_score"]
+        analysis["recruiter_score"] = chatgpt_eval["overall_score"]
+        analysis["verdict"] = verdict
+        analysis["verdict_color"] = vcolor
+        analysis["interview_chance"] = interview
+        analysis["evaluation"] = chatgpt_eval
         resume_content = generate_resume_content(
             missing, matched, jd_title,
             analysis["signals"], analysis["gap_breakdown"], rtext
@@ -212,7 +247,16 @@ def score():
         except Exception as _e:
             log.warning("score_history log failed: %s", _e)
 
-    return jsonify({"results": results, "total": len(results), "jd_title": jd_title})
+    return jsonify({
+        "results": results,
+        "total": len(results),
+        "jd_title": jd_title,
+        "jd_domain": {
+            "key": jd_domain,
+            "label": domain_label(jd_domain),
+            "confidence": jd_domain_confidence,
+        },
+    })
 
 
 @app.route("/api/download", methods=["POST"])
